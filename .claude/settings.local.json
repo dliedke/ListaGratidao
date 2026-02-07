@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(dir /s \"C:\\\\GitLab\\\\ListaGratidao\")",
-      "Bash(dir /s \"C:\\\\GitLab\\\\ConversorGratidao\")"
+      "Bash(dir /s \"C:\\\\GitLab\\\\ConversorGratidao\")",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(firebase init:*)",
+      "Bash(where:*)"
     ]
   }
 }
