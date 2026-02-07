@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diário da Gratidão</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Login Screen -->
     <div id="login-screen" class="screen">
         <div class="login-container">
-            <h1>Diário da Gratidão</h1>
-            <p>Registre diariamente seus motivos de gratidão</p>
+            <h1 data-i18n="appTitle">Diário da Gratidão</h1>
+            <p data-i18n="appSubtitle">Registre diariamente seus motivos de gratidão</p>
             <button id="btn-google-login" class="btn-google">
                 <svg width="18" height="18" viewBox="0 0 48 48">
                     <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -19,7 +20,7 @@
                     <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
                     <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                 </svg>
-                Entrar com Google
+                <span data-i18n="loginGoogle">Entrar com Google</span>
             </button>
         </div>
     </div>
@@ -28,16 +29,16 @@
     <div id="app-screen" class="screen hidden">
         <!-- Header -->
         <header>
-            <h1>Diário da Gratidão</h1>
+            <h1 data-i18n="appTitle">Diário da Gratidão</h1>
             <div class="header-actions">
-                <button id="btn-export" class="btn-icon" title="Exportar CSV">
+                <button id="btn-export" class="btn-icon" data-i18n-title="exportTooltip" title="Exportar">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                         <polyline points="7 10 12 15 17 10"/>
                         <line x1="12" y1="15" x2="12" y2="3"/>
                     </svg>
                 </button>
-                <button id="btn-logout" class="btn-icon" title="Sair">
+                <button id="btn-logout" class="btn-icon" data-i18n-title="logoutTooltip" title="Sair">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                         <polyline points="16 17 21 12 16 7"/>
@@ -65,14 +66,82 @@
     <div id="entry-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modal-date"></h3>
-                <button id="btn-close-modal" class="btn-close">&times;</button>
+                <div class="modal-header-info">
+                    <h3 id="modal-date"></h3>
+                    <div id="modal-weekday" class="modal-weekday"></div>
+                </div>
+                <div class="modal-header-actions">
+                    <button id="btn-delete-entry" class="btn-trash" data-i18n-title="deleteTooltip" title="Apagar entrada">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                            <path d="M10 11v6"/>
+                            <path d="M14 11v6"/>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                        </svg>
+                    </button>
+                    <button id="btn-close-modal" class="btn-close">&times;</button>
+                </div>
             </div>
-            <label for="entry-textarea">Pelo que você é grato(a) hoje?</label>
-            <textarea id="entry-textarea" rows="6" placeholder="Escreva um motivo por linha..."></textarea>
+            <label for="entry-textarea" data-i18n="entryLabel">Pelo que você é grato(a) hoje?</label>
+            <textarea id="entry-textarea" data-i18n-placeholder="entryPlaceholder" placeholder="Escreva um motivo por linha..."></textarea>
             <div class="modal-actions">
-                <button id="btn-delete-entry" class="btn-delete">Apagar</button>
-                <button id="btn-save-entry" class="btn-save">Salvar</button>
+                <button id="btn-cancel-entry" class="btn-cancel" data-i18n="cancel">Cancelar</button>
+                <button id="btn-save-entry" class="btn-save" data-i18n="save">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title-green" data-i18n="exportTitle">Exportar Gratidão</h3>
+                <button id="btn-close-export" class="btn-close">&times;</button>
+            </div>
+            <div class="export-fields">
+                <div class="export-field">
+                    <label for="export-date-start" data-i18n="dateStart">Data início</label>
+                    <input type="date" id="export-date-start">
+                </div>
+                <div class="export-field">
+                    <label for="export-date-end" data-i18n="dateEnd">Data fim</label>
+                    <input type="date" id="export-date-end">
+                </div>
+            </div>
+            <div class="export-field export-field-email hidden" id="export-email-field">
+                <div class="email-label-row">
+                    <label for="export-email" data-i18n="emailLabel">Email destinatário</label>
+                    <button id="btn-email-help" class="btn-email-help hidden" data-i18n-title="emailHelpTooltip" title="Configurar email">?</button>
+                </div>
+                <input type="email" id="export-email" placeholder="exemplo@email.com">
+            </div>
+            <div class="modal-actions">
+                <button id="btn-export-txt" class="btn-save" data-i18n="downloadTXT">Baixar TXT</button>
+                <button id="btn-export-email" class="btn-save btn-email" data-i18n="sendEmail">Enviar por Email</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Help Modal (PC only) -->
+    <div id="email-help-modal" class="modal hidden">
+        <div class="modal-content modal-content-help">
+            <div class="modal-header">
+                <h3 class="modal-title-green" data-i18n="emailHelpTitle">Como configurar o mailto no Windows para abrir o Gmail no Chrome</h3>
+                <button id="btn-close-email-help" class="btn-close">&times;</button>
+            </div>
+            <div class="help-steps">
+                <div class="help-step">
+                    <h4 data-i18n="emailHelpStep1Title">1. Definir o Chrome como navegador padrão</h4>
+                    <p data-i18n-html="emailHelpStep1">Abra <strong>Configurações do Windows</strong> &rarr; <strong>Aplicativos</strong> &rarr; <strong>Aplicativos padrão</strong>. Em <strong>Navegador da Web</strong>, escolha <strong>Google Chrome</strong>.</p>
+                </div>
+                <div class="help-step">
+                    <h4 data-i18n="emailHelpStep2Title">2. Ativar o Gmail como manipulador de email no Chrome</h4>
+                    <p data-i18n-html="emailHelpStep2">Abra o Chrome e acesse <strong>mail.google.com</strong>. Faça login na sua conta. Na barra de endereço, procure o ícone de losango com um envelope (lado direito). Clique nele e selecione <strong>Permitir</strong>. Confirme o Gmail como aplicativo padrão para links de email.</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-email-help-ok" class="btn-save" data-i18n="emailHelpClose">Entendi</button>
             </div>
         </div>
     </div>
