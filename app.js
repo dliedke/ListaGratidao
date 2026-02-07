@@ -661,4 +661,9 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("email-help-modal").classList.add("hidden");
         }
     });
+
+    // Register Service Worker for PWA install
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js");
+    }
 });

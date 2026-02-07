@@ -1,44 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<!DOCTYPE html>
+<html>
+<head><title>Generate Icons</title></head>
+<body style="background:#333;color:#fff;font-family:sans-serif;padding:2rem;">
+<h2>PNG Icon Generator</h2>
+<p>Click the download links below to save each icon.</p>
+<div style="display:flex;gap:2rem;align-items:end;margin-top:1rem;">
+    <div>
+        <canvas id="c192" width="192" height="192"></canvas>
+        <br><a id="link192" style="color:#66bb6a;">Loading...</a>
+    </div>
+    <div>
+        <canvas id="c512" width="512" height="512"></canvas>
+        <br><a id="link512" style="color:#66bb6a;">Loading...</a>
+    </div>
+</div>
+<script>
+const svgSource = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="112" fill="#1e1e1e"/>
-
-  <!-- Left hand -->
-  <path d="M88 385 C70 325 55 275 62 238 C68 205 90 185 118 175 C142 168 162 172 178 188 C190 200 194 218 190 242 C183 275 170 330 160 385Z"
-        fill="#fcd8b0" stroke="#3a3a3a" stroke-width="10" stroke-linejoin="round"/>
-  <path d="M190 242 C202 228 216 232 220 248 C224 265 214 278 200 278 C190 278 186 265 188 255Z"
-        fill="#fcd8b0" stroke="#3a3a3a" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M88 385 C70 325 55 275 62 238 C68 205 90 185 118 175 C142 168 162 172 178 188 C190 200 194 218 190 242 C183 275 170 330 160 385Z" fill="#fcd8b0" stroke="#3a3a3a" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M190 242 C202 228 216 232 220 248 C224 265 214 278 200 278 C190 278 186 265 188 255Z" fill="#fcd8b0" stroke="#3a3a3a" stroke-width="8" stroke-linejoin="round"/>
   <line x1="100" y1="200" x2="108" y2="230" stroke="#3a3a3a" stroke-width="5" stroke-linecap="round"/>
   <line x1="128" y1="182" x2="132" y2="215" stroke="#3a3a3a" stroke-width="5" stroke-linecap="round"/>
   <line x1="155" y1="180" x2="155" y2="212" stroke="#3a3a3a" stroke-width="5" stroke-linecap="round"/>
-
-  <!-- Left cuff -->
   <rect x="62" y="373" width="108" height="50" rx="6" fill="#9b59b6" stroke="#3a3a3a" stroke-width="9"/>
   <rect x="62" y="373" width="108" height="16" rx="4" fill="#7d3c98" stroke="#3a3a3a" stroke-width="9"/>
-
-  <!-- Right hand -->
-  <path d="M424 385 C442 325 457 275 450 238 C444 205 422 185 394 175 C370 168 350 172 334 188 C322 200 318 218 322 242 C329 275 342 330 352 385Z"
-        fill="#fcd8b0" stroke="#3a3a3a" stroke-width="10" stroke-linejoin="round"/>
-  <path d="M322 242 C310 228 296 232 292 248 C288 265 298 278 312 278 C322 278 326 265 324 255Z"
-        fill="#fcd8b0" stroke="#3a3a3a" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M424 385 C442 325 457 275 450 238 C444 205 422 185 394 175 C370 168 350 172 334 188 C322 200 318 218 322 242 C329 275 342 330 352 385Z" fill="#fcd8b0" stroke="#3a3a3a" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M322 242 C310 228 296 232 292 248 C288 265 298 278 312 278 C322 278 326 265 324 255Z" fill="#fcd8b0" stroke="#3a3a3a" stroke-width="8" stroke-linejoin="round"/>
   <line x1="412" y1="200" x2="404" y2="230" stroke="#3a3a3a" stroke-width="5" stroke-linecap="round"/>
   <line x1="384" y1="182" x2="380" y2="215" stroke="#3a3a3a" stroke-width="5" stroke-linecap="round"/>
   <line x1="357" y1="180" x2="357" y2="212" stroke="#3a3a3a" stroke-width="5" stroke-linecap="round"/>
-
-  <!-- Right cuff -->
   <rect x="342" y="373" width="108" height="50" rx="6" fill="#9b59b6" stroke="#3a3a3a" stroke-width="9"/>
   <rect x="342" y="373" width="108" height="16" rx="4" fill="#7d3c98" stroke="#3a3a3a" stroke-width="9"/>
-
-  <!-- Face -->
   <circle cx="256" cy="228" r="88" fill="#f7dc6f" stroke="#3a3a3a" stroke-width="11"/>
   <ellipse cx="236" cy="205" rx="35" ry="20" fill="#fce88d" opacity="0.4" transform="rotate(-15 236 205)"/>
-
-  <!-- Left eye -->
   <path d="M222 222 Q233 208 244 222" fill="none" stroke="#3a3a3a" stroke-width="8" stroke-linecap="round"/>
-  <!-- Right eye -->
   <path d="M268 222 Q279 208 290 222" fill="none" stroke="#3a3a3a" stroke-width="8" stroke-linecap="round"/>
-  <!-- Smile -->
   <path d="M236 255 Q256 272 276 255" fill="none" stroke="#3a3a3a" stroke-width="8" stroke-linecap="round"/>
-
-  <!-- Rays -->
   <g stroke="#e0e0e0" stroke-width="11" stroke-linecap="round">
     <line x1="256" y1="112" x2="256" y2="78"/>
     <line x1="214" y1="120" x2="198" y2="90"/>
@@ -46,10 +43,29 @@
     <line x1="178" y1="140" x2="158" y2="116"/>
     <line x1="334" y1="140" x2="354" y2="116"/>
   </g>
-
-  <!-- Left sparkle -->
   <path d="M108 160 L114 146 L120 130 L126 146 L140 152 L126 158 L120 175 L114 158 L98 152 L114 146Z" fill="#f7dc6f" stroke="#3a3a3a" stroke-width="4" stroke-linejoin="round"/>
-
-  <!-- Right sparkle -->
   <path d="M404 160 L398 146 L392 130 L386 146 L372 152 L386 158 L392 175 L398 158 L414 152 L398 146Z" fill="#f7dc6f" stroke="#3a3a3a" stroke-width="4" stroke-linejoin="round"/>
-</svg>
+</svg>`;
+
+function render(canvasId, linkId, size) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    const blob = new Blob([svgSource], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+        ctx.drawImage(img, 0, 0, size, size);
+        URL.revokeObjectURL(url);
+        const link = document.getElementById(linkId);
+        link.href = canvas.toDataURL("image/png");
+        link.download = `icon-${size}x${size}.png`;
+        link.textContent = `Download icon-${size}x${size}.png`;
+    };
+    img.src = url;
+}
+
+render("c192", "link192", 192);
+render("c512", "link512", 512);
+</script>
+</body>
+</html>
