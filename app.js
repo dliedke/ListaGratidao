@@ -662,8 +662,37 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Register Service Worker for PWA install
+    // Register Service Worker for PWA install and force fast updates
     if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/sw.js");
+        let reloadingAfterUpdate = false;
+
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (reloadingAfterUpdate) return;
+            reloadingAfterUpdate = true;
+            window.location.reload();
+        });
+
+        navigator.serviceWorker.register("/sw.js")
+            .then((registration) => {
+                registration.update();
+
+                if (registration.waiting) {
+                    registration.waiting.postMessage({ type: "SKIP_WAITING" });
+                }
+
+                registration.addEventListener("updatefound", () => {
+                    const newWorker = registration.installing;
+                    if (!newWorker) return;
+
+                    newWorker.addEventListener("statechange", () => {
+                        if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+                            newWorker.postMessage({ type: "SKIP_WAITING" });
+                        }
+                    });
+                });
+            })
+            .catch((error) => {
+                console.error("Service Worker registration failed:", error);
+            });
     }
 });
