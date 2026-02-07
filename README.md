@@ -57,3 +57,26 @@ firebase.json       Firebase Hosting settings
 ```bash
 firebase deploy --only hosting
 ```
+
+## Install as an App (Android and iOS)
+
+### Android (Chrome or Edge)
+
+1. Open the app URL in Chrome or Edge.
+2. Wait for the install banner, then tap **Install**.
+3. If no banner appears, open the browser menu and tap **Install app** or **Add to Home screen**.
+4. Confirm the installation.
+5. Open the app from the home screen.
+
+### iOS (Safari)
+
+1. Open the app URL in Safari.
+2. Tap the **Share** button.
+3. Tap **Add to Home Screen**.
+4. Confirm by tapping **Add**.
+5. Open the app from the home screen.
+
+### Notes
+
+1. On iOS, the install option only appears in Safari.
+2. If the icon looks outdated after a new deploy, remove the app shortcut from the home screen and add it again.
