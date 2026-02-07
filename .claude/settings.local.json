@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /s \"C:\\\\GitLab\\\\ListaGratidao\")",
+      "Bash(dir /s \"C:\\\\GitLab\\\\ConversorGratidao\")"
+    ]
+  }
+}

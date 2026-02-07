@@ -1,0 +1,12 @@
+{
+  "name": "listagratidao",
+  "version": "1.0.0",
+  "description": "Diário da Gratidão - Web app para registrar gratidão diária com exportação CSV",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
