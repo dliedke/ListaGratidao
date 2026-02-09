@@ -17,6 +17,19 @@ const I18n = {
             entryPlaceholder: "Escreva um motivo por linha...",
             cancel: "Cancelar",
             save: "Salvar",
+            saving: "Salvando...",
+            saved: "Salvo ✓",
+            streakDaysSingular: "dia seguido!",
+            streakDaysPlural: "dias seguidos!",
+            statsTitle: "Suas Estatísticas",
+            statsCurrentStreak: "Sequência Atual",
+            statsBestStreak: "Melhor Sequência",
+            statsTotalEntries: "Total de Entradas",
+            statsThisMonth: "Este Mês",
+            statsThisWeek: "Esta Semana",
+            statsThisYear: "Este Ano",
+            statsFirstEntry: "Primeira Entrada",
+            statsAvgReasons: "Média de Motivos/Dia",
             exportTitle: "Exportar Gratidão",
             dateStart: "Data início",
             dateEnd: "Data fim",
@@ -56,6 +69,19 @@ const I18n = {
             entryPlaceholder: "Write one reason per line...",
             cancel: "Cancel",
             save: "Save",
+            saving: "Saving...",
+            saved: "Saved ✓",
+            streakDaysSingular: "day streak!",
+            streakDaysPlural: "days streak!",
+            statsTitle: "Your Statistics",
+            statsCurrentStreak: "Current Streak",
+            statsBestStreak: "Best Streak",
+            statsTotalEntries: "Total Entries",
+            statsThisMonth: "This Month",
+            statsThisWeek: "This Week",
+            statsThisYear: "This Year",
+            statsFirstEntry: "First Entry",
+            statsAvgReasons: "Avg. Reasons/Day",
             exportTitle: "Export Gratitude Journal",
             dateStart: "Start date",
             dateEnd: "End date",
@@ -222,6 +248,226 @@ const DB = {
 };
 
 // ============================================================
+// Streak Module — Calculate and display consecutive days
+// ============================================================
+const Streak = {
+    currentStreak: 0,
+
+    async calculate() {
+        try {
+            const entries = await DB.loadAll();
+
+            if (entries.length === 0) {
+                this.currentStreak = 0;
+                return 0;
+            }
+
+            // Obter hoje à meia-noite
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Converter datas das entradas para timestamps
+            const entryDates = entries.map(e => {
+                const [y, m, d] = e.date.split("-");
+                const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                date.setHours(0, 0, 0, 0);
+                return date.getTime();
+            });
+
+            entryDates.sort((a, b) => b - a); // Ordem decrescente
+
+            let currentDate = today.getTime();
+            let streak = 0;
+
+            // Verificar se tem entrada hoje
+            if (entryDates.includes(currentDate)) {
+                streak = 1;
+                currentDate -= 86400000; // Voltar 1 dia
+            } else {
+                // Sem entrada hoje, verificar ontem
+                currentDate -= 86400000;
+                if (!entryDates.includes(currentDate)) {
+                    // Sem entrada ontem também, streak quebrado
+                    this.currentStreak = 0;
+                    return 0;
+                }
+                streak = 1;
+                currentDate -= 86400000;
+            }
+
+            // Contar dias consecutivos para trás
+            while (entryDates.includes(currentDate)) {
+                streak++;
+                currentDate -= 86400000;
+            }
+
+            this.currentStreak = streak;
+            return streak;
+
+        } catch (error) {
+            console.error("Error calculating streak:", error);
+            this.currentStreak = 0;
+            return 0;
+        }
+    },
+
+    display() {
+        const streakEl = document.getElementById("streak-counter");
+        const streakDaysEl = document.getElementById("streak-days");
+        const streakTextEl = document.getElementById("streak-text");
+
+        if (this.currentStreak === 0) {
+            streakEl.classList.add("hidden");
+            return;
+        }
+
+        streakDaysEl.textContent = this.currentStreak;
+
+        const textKey = this.currentStreak === 1 ? "streakDaysSingular" : "streakDaysPlural";
+        streakTextEl.textContent = I18n.t(textKey);
+
+        streakEl.classList.remove("hidden");
+    },
+
+    async update() {
+        await this.calculate();
+        this.display();
+    }
+};
+
+// ============================================================
+// Stats Module — Calculate and display statistics
+// ============================================================
+const Stats = {
+    async calculate() {
+        try {
+            const entries = await DB.loadAll();
+
+            if (entries.length === 0) {
+                return {
+                    currentStreak: 0,
+                    bestStreak: 0,
+                    totalEntries: 0,
+                    thisMonth: 0,
+                    thisWeek: 0,
+                    thisYear: 0,
+                    firstEntry: null,
+                    avgReasonsPerDay: 0
+                };
+            }
+
+            // Convert entry dates to timestamps
+            const entryDates = entries.map(e => {
+                const [y, m, d] = e.date.split("-");
+                const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                date.setHours(0, 0, 0, 0);
+                return { timestamp: date.getTime(), date: e.date, content: e.content };
+            });
+
+            entryDates.sort((a, b) => b.timestamp - a.timestamp);
+
+            // Current streak (usar o módulo Streak)
+            const currentStreak = Streak.currentStreak;
+
+            // Best streak
+            let bestStreak = 0;
+            let tempStreak = 1;
+            for (let i = 0; i < entryDates.length - 1; i++) {
+                const diff = entryDates[i].timestamp - entryDates[i + 1].timestamp;
+                if (diff === 86400000) { // 1 day
+                    tempStreak++;
+                    bestStreak = Math.max(bestStreak, tempStreak);
+                } else {
+                    tempStreak = 1;
+                }
+            }
+            bestStreak = Math.max(bestStreak, tempStreak);
+
+            // Total entries
+            const totalEntries = entries.length;
+
+            // This month
+            const now = new Date();
+            const thisMonth = entries.filter(e => {
+                const [y, m] = e.date.split("-");
+                return parseInt(y) === now.getFullYear() && parseInt(m) === now.getMonth() + 1;
+            }).length;
+
+            // This week
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay());
+            startOfWeek.setHours(0, 0, 0, 0);
+            const thisWeek = entries.filter(e => {
+                const [y, m, d] = e.date.split("-");
+                const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                return date >= startOfWeek;
+            }).length;
+
+            // This year
+            const thisYear = entries.filter(e => {
+                const [y] = e.date.split("-");
+                return parseInt(y) === now.getFullYear();
+            }).length;
+
+            // First entry
+            const firstEntry = entries[entries.length - 1].date;
+
+            // Average reasons per day
+            const totalReasons = entries.reduce((sum, e) => {
+                return sum + e.content.split("\n").filter(l => l.trim()).length;
+            }, 0);
+            const avgReasonsPerDay = (totalReasons / totalEntries).toFixed(1);
+
+            return {
+                currentStreak,
+                bestStreak,
+                totalEntries,
+                thisMonth,
+                thisWeek,
+                thisYear,
+                firstEntry,
+                avgReasonsPerDay
+            };
+
+        } catch (error) {
+            console.error("Error calculating stats:", error);
+            return null;
+        }
+    },
+
+    async showModal() {
+        const stats = await this.calculate();
+        if (!stats) return;
+
+        document.getElementById("stats-current-streak").textContent = stats.currentStreak;
+        document.getElementById("stats-best-streak").textContent = stats.bestStreak;
+        document.getElementById("stats-total-entries").textContent = stats.totalEntries;
+        document.getElementById("stats-this-month").textContent = stats.thisMonth;
+        document.getElementById("stats-this-week").textContent = stats.thisWeek;
+        document.getElementById("stats-this-year").textContent = stats.thisYear;
+        document.getElementById("stats-avg-reasons").textContent = stats.avgReasonsPerDay;
+
+        // Format first entry date
+        if (stats.firstEntry) {
+            const [y, m, d] = stats.firstEntry.split("-");
+            const monthNames = I18n.t("months").split(",");
+            const monthName = monthNames[parseInt(m) - 1];
+            document.getElementById("stats-first-entry").textContent =
+                I18n.t("dateDisplayFormat")
+                    .replace("{day}", parseInt(d))
+                    .replace("{month}", monthName)
+                    .replace("{year}", y);
+        }
+
+        document.getElementById("stats-modal").classList.remove("hidden");
+    },
+
+    closeModal() {
+        document.getElementById("stats-modal").classList.add("hidden");
+    }
+};
+
+// ============================================================
 // Calendar Module
 // ============================================================
 const Calendar = {
@@ -231,6 +477,7 @@ const Calendar = {
 
     async load() {
         this.entries = await DB.loadMonth(this.year, this.month);
+        await Streak.update();
         this.render();
     },
 
@@ -343,6 +590,11 @@ const EntryForm = {
     },
 
     close() {
+        // Reset save button state
+        const saveBtn = document.getElementById("btn-save-entry");
+        saveBtn.disabled = false;
+        saveBtn.textContent = I18n.t("save");
+
         document.getElementById("entry-modal").classList.add("hidden");
         this.currentDate = null;
     },
@@ -350,15 +602,36 @@ const EntryForm = {
     async save() {
         if (!this.currentDate) return;
 
-        const content = document.getElementById("entry-textarea").value.trim();
-        if (content) {
-            await DB.save(this.currentDate, content);
-        } else {
-            await DB.remove(this.currentDate);
-        }
+        const saveBtn = document.getElementById("btn-save-entry");
+        const originalText = saveBtn.textContent;
 
-        this.close();
-        Calendar.load();
+        // Mostrar "Salvando..."
+        saveBtn.disabled = true;
+        saveBtn.textContent = I18n.t("saving");
+
+        const content = document.getElementById("entry-textarea").value.trim();
+
+        try {
+            if (content) {
+                await DB.save(this.currentDate, content);
+            } else {
+                await DB.remove(this.currentDate);
+            }
+
+            // Mostrar "Salvo ✓"
+            saveBtn.textContent = I18n.t("saved");
+
+            setTimeout(() => {
+                this.close();
+                Calendar.load();
+            }, 500); // Delay para mostrar sucesso
+
+        } catch (error) {
+            console.error("Save error:", error);
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+            alert("Erro ao salvar. Tente novamente.");
+        }
     },
 
     async remove() {
@@ -367,6 +640,30 @@ const EntryForm = {
         await DB.remove(this.currentDate);
         this.close();
         Calendar.load();
+    },
+
+    insertEmoji(emoji) {
+        const textarea = document.getElementById("entry-textarea");
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+
+        // Inserir emoji na posição do cursor
+        const before = text.substring(0, start);
+        const after = text.substring(end, text.length);
+
+        // Adicionar espaço após emoji se necessário
+        const needsSpace = after.length > 0 && after[0] !== ' ' && after[0] !== '\n';
+        const emojiWithSpace = needsSpace ? emoji + ' ' : emoji;
+
+        textarea.value = before + emojiWithSpace + after;
+
+        // Posicionar cursor após o emoji
+        const newPosition = start + emojiWithSpace.length;
+        textarea.setSelectionRange(newPosition, newPosition);
+
+        // Focar no textarea
+        textarea.focus();
     }
 };
 
@@ -616,10 +913,22 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-save-entry").addEventListener("click", () => EntryForm.save());
     document.getElementById("btn-delete-entry").addEventListener("click", () => EntryForm.remove());
 
+    // Emoji buttons
+    document.querySelectorAll(".btn-emoji").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const emoji = btn.getAttribute("data-emoji");
+            EntryForm.insertEmoji(emoji);
+        });
+    });
+
     // Export modal
     document.getElementById("btn-close-export").addEventListener("click", () => TXTExport.closeModal());
     document.getElementById("btn-export-txt").addEventListener("click", () => TXTExport.downloadTXT());
     document.getElementById("btn-export-email").addEventListener("click", () => TXTExport.sendEmail());
+
+    // Stats modal
+    document.getElementById("app-icon").addEventListener("click", () => Stats.showModal());
+    document.getElementById("btn-close-stats").addEventListener("click", () => Stats.closeModal());
 
     // Email help (PC only — show button if not mobile/tablet)
     const isPC = !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -652,12 +961,18 @@ document.addEventListener("DOMContentLoaded", () => {
             e.currentTarget.classList.add("hidden");
         }
     });
+    document.getElementById("stats-modal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) {
+            Stats.closeModal();
+        }
+    });
 
     // Close modals on Escape
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
             EntryForm.close();
             TXTExport.closeModal();
+            Stats.closeModal();
             document.getElementById("email-help-modal").classList.add("hidden");
         }
     });

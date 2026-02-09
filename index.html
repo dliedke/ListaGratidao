@@ -60,15 +60,19 @@
                 <h2 id="calendar-title"></h2>
                 <button id="btn-next-month" class="btn-nav">&rarr;</button>
             </div>
+            <!-- Streak counter -->
+            <div id="streak-counter" class="streak-counter hidden">
+                🔥 <span id="streak-days">0</span> <span id="streak-text"></span>
+            </div>
             <div class="calendar-weekdays">
                 <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span>
             </div>
             <div id="calendar-grid" class="calendar-grid"></div>
         </div>
 
-        <!-- Icon preview (temporary) -->
+        <!-- App icon (clickable for stats) -->
         <div style="text-align:center;padding:2rem;">
-            <img src="favicon.svg?v=20260207-1" alt="Icon preview" style="width:128px;height:128px;">
+            <img id="app-icon" src="favicon.svg?v=20260207-1" alt="Icon preview" style="width:128px;height:128px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
     </div>
 
@@ -94,6 +98,14 @@
                 </div>
             </div>
             <label for="entry-textarea" data-i18n="entryLabel">Pelo que você é grato(a) hoje?</label>
+            <!-- Quick emoji buttons -->
+            <div class="emoji-buttons">
+                <button type="button" class="btn-emoji" data-emoji="❤️">❤️</button>
+                <button type="button" class="btn-emoji" data-emoji="🙏">🙏</button>
+                <button type="button" class="btn-emoji" data-emoji="✨">✨</button>
+                <button type="button" class="btn-emoji" data-emoji="🌟">🌟</button>
+                <button type="button" class="btn-emoji" data-emoji="💚">💚</button>
+            </div>
             <textarea id="entry-textarea" data-i18n-placeholder="entryPlaceholder" placeholder="Escreva um motivo por linha..."></textarea>
             <div class="modal-actions">
                 <button id="btn-cancel-entry" class="btn-cancel" data-i18n="cancel">Cancelar</button>
@@ -152,6 +164,58 @@
             </div>
             <div class="modal-actions">
                 <button id="btn-email-help-ok" class="btn-save" data-i18n="emailHelpClose">Entendi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="modal hidden">
+        <div class="modal-content modal-content-stats">
+            <div class="modal-header">
+                <h3 class="modal-title-green" data-i18n="statsTitle">Suas Estatísticas</h3>
+                <button id="btn-close-stats" class="btn-close">&times;</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card stat-card-fire">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-label" data-i18n="statsCurrentStreak">Sequência Atual</div>
+                    <div class="stat-value" id="stats-current-streak">0</div>
+                </div>
+                <div class="stat-card stat-card-trophy">
+                    <div class="stat-icon">🏆</div>
+                    <div class="stat-label" data-i18n="statsBestStreak">Melhor Sequência</div>
+                    <div class="stat-value" id="stats-best-streak">0</div>
+                </div>
+                <div class="stat-card stat-card-note">
+                    <div class="stat-icon">📝</div>
+                    <div class="stat-label" data-i18n="statsTotalEntries">Total de Entradas</div>
+                    <div class="stat-value" id="stats-total-entries">0</div>
+                </div>
+                <div class="stat-card stat-card-calendar">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-label" data-i18n="statsThisMonth">Este Mês</div>
+                    <div class="stat-value" id="stats-this-month">0</div>
+                </div>
+                <div class="stat-card stat-card-chart">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-label" data-i18n="statsThisWeek">Esta Semana</div>
+                    <div class="stat-value" id="stats-this-week">0</div>
+                </div>
+                <div class="stat-card stat-card-star">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-label" data-i18n="statsThisYear">Este Ano</div>
+                    <div class="stat-value" id="stats-this-year">0</div>
+                </div>
+                <div class="stat-card stat-card-target">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-label" data-i18n="statsFirstEntry">Primeira Entrada</div>
+                    <div class="stat-value stat-value-small" id="stats-first-entry">-</div>
+                </div>
+                <div class="stat-card stat-card-heart">
+                    <div class="stat-icon">💚</div>
+                    <div class="stat-label" data-i18n="statsAvgReasons">Média de Motivos/Dia</div>
+                    <div class="stat-value" id="stats-avg-reasons">0</div>
+                </div>
             </div>
         </div>
     </div>

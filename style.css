@@ -154,6 +154,22 @@ header h1 {
     background: var(--bg-tertiary);
 }
 
+.streak-counter {
+    text-align: center;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--green-900), rgba(76, 175, 80, 0.1));
+    border: 1px solid var(--green-800);
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--green-400);
+}
+
+.streak-counter span {
+    color: var(--text-primary);
+}
+
 .calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -308,6 +324,41 @@ header h1 {
     margin-bottom: 0.5rem;
 }
 
+.emoji-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn-emoji {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-tertiary);
+    font-size: 1.75rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    font-family: "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", sans-serif;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-emoji:hover {
+    background: var(--bg-hover);
+    transform: scale(1.1);
+}
+
+.btn-emoji:active {
+    transform: scale(0.95);
+}
+
 .modal-content textarea {
     width: 100%;
     min-height: 200px;
@@ -316,7 +367,7 @@ header h1 {
     border-radius: var(--radius);
     background: var(--bg-primary);
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: 1.05rem;
     color: var(--text-primary);
     resize: vertical;
     outline: none;
@@ -367,6 +418,11 @@ header h1 {
 
 .btn-save:hover {
     background: var(--green-500);
+}
+
+.btn-save:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 /* Export Modal */
@@ -502,6 +558,123 @@ header h1 {
     line-height: 1.5;
 }
 
+/* Stats Modal */
+.modal-content-stats {
+    max-width: 600px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.stat-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--green-400);
+}
+
+.stat-value-small {
+    font-size: 0.9rem;
+    line-height: 1.3;
+}
+
+/* Card color variations */
+.stat-card-fire {
+    background: linear-gradient(135deg, rgba(255, 87, 34, 0.1), var(--bg-tertiary));
+    border-color: rgba(255, 87, 34, 0.3);
+}
+
+.stat-card-fire .stat-value {
+    color: #ff9800;
+}
+
+.stat-card-trophy {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), var(--bg-tertiary));
+    border-color: rgba(255, 193, 7, 0.3);
+}
+
+.stat-card-trophy .stat-value {
+    color: #ffc107;
+}
+
+.stat-card-note {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), var(--bg-tertiary));
+    border-color: var(--green-800);
+}
+
+.stat-card-calendar {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), var(--bg-tertiary));
+    border-color: rgba(33, 150, 243, 0.3);
+}
+
+.stat-card-calendar .stat-value {
+    color: #42a5f5;
+}
+
+.stat-card-chart {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), var(--bg-tertiary));
+    border-color: rgba(156, 39, 176, 0.3);
+}
+
+.stat-card-chart .stat-value {
+    color: #ab47bc;
+}
+
+.stat-card-star {
+    background: linear-gradient(135deg, rgba(255, 235, 59, 0.1), var(--bg-tertiary));
+    border-color: rgba(255, 235, 59, 0.3);
+}
+
+.stat-card-star .stat-value {
+    color: #ffeb3b;
+}
+
+.stat-card-target {
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), var(--bg-tertiary));
+    border-color: rgba(244, 67, 54, 0.3);
+}
+
+.stat-card-target .stat-value {
+    color: #ef5350;
+}
+
+.stat-card-heart {
+    background: linear-gradient(135deg, var(--green-900), rgba(76, 175, 80, 0.1));
+    border-color: var(--green-800);
+}
+
 /* Responsive */
 @media (max-width: 400px) {
     header h1 {
@@ -514,5 +687,22 @@ header h1 {
 
     .modal-content {
         padding: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .stat-card {
+        padding: 0.75rem;
+    }
+
+    .stat-icon {
+        font-size: 1.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
     }
 }
