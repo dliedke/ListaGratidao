@@ -1,8 +1,8 @@
 {
-    "name": "Gratitude Journal",
-    "short_name": "Gratitude",
-    "description": "Record your daily reasons for gratitude",
-    "start_url": "/?v=20260207-1",
+    "name": "Diário da Gratidão",
+    "short_name": "Gratidão",
+    "description": "Registre diariamente seus motivos de gratidão",
+    "start_url": "/?v=20260209-1",
     "display": "standalone",
     "background_color": "#121212",
     "theme_color": "#1e1e1e",
