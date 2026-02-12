@@ -55,7 +55,12 @@ const I18n = {
             emailHelpStep1: "Abra <strong>Configurações do Windows</strong> &rarr; <strong>Aplicativos</strong> &rarr; <strong>Aplicativos padrão</strong>. Em <strong>Navegador da Web</strong>, escolha <strong>Google Chrome</strong>.",
             emailHelpStep2Title: "2. Ativar o Gmail como manipulador de email no Chrome",
             emailHelpStep2: "Abra o Chrome e acesse <strong>mail.google.com</strong>. Faça login na sua conta. Na barra de endereço, procure o ícone de losango com um envelope (lado direito). Clique nele e selecione <strong>Permitir</strong>. Confirme o Gmail como aplicativo padrão para links de email.",
-            emailHelpClose: "Entendi"
+            emailHelpClose: "Entendi",
+            settingsTitle: "Configurações",
+            settingsEmojis: "Emojis rápidos",
+            settingsTooltip: "Configurações",
+            settingsSave: "Salvar",
+            settingsReset: "Restaurar padrão"
         },
         en: {
             appTitle: "Gratitude Journal",
@@ -107,7 +112,12 @@ const I18n = {
             emailHelpStep1: "Open <strong>Windows Settings</strong> &rarr; <strong>Apps</strong> &rarr; <strong>Default apps</strong>. Under <strong>Web browser</strong>, choose <strong>Google Chrome</strong>.",
             emailHelpStep2Title: "2. Enable Gmail as the email handler in Chrome",
             emailHelpStep2: "Open Chrome and go to <strong>mail.google.com</strong>. Sign in to your account. In the address bar, look for a diamond icon with an envelope (right side). Click it and select <strong>Allow</strong>. Confirm Gmail as the default app for email links.",
-            emailHelpClose: "Got it"
+            emailHelpClose: "Got it",
+            settingsTitle: "Settings",
+            settingsEmojis: "Quick emojis",
+            settingsTooltip: "Settings",
+            settingsSave: "Save",
+            settingsReset: "Reset to default"
         }
     },
 
@@ -159,6 +169,7 @@ const Auth = {
             if (user) {
                 document.getElementById("login-screen").classList.add("hidden");
                 document.getElementById("app-screen").classList.remove("hidden");
+                Settings.load();
                 Calendar.load();
                 Router.check();
             } else {
@@ -244,6 +255,94 @@ const DB = {
             entries.push({ date: doc.data().date, content: doc.data().content });
         });
         return entries;
+    }
+};
+
+// ============================================================
+// Settings Module — User preferences (emoji buttons)
+// ============================================================
+const Settings = {
+    defaultEmojis: ["❤️", "🙏", "✨", "🌟", "💚"],
+    emojis: [],
+
+    _settingsRef() {
+        return db.collection("users").doc(Auth.currentUser.uid).collection("settings").doc("preferences");
+    },
+
+    async load() {
+        try {
+            const doc = await this._settingsRef().get();
+            if (doc.exists && doc.data().emojis) {
+                this.emojis = doc.data().emojis;
+            } else {
+                this.emojis = [...this.defaultEmojis];
+            }
+        } catch (e) {
+            this.emojis = [...this.defaultEmojis];
+        }
+        this.renderEmojiButtons();
+    },
+
+    async save(emojis) {
+        this.emojis = emojis;
+        await this._settingsRef().set({ emojis }, { merge: true });
+        this.renderEmojiButtons();
+    },
+
+    renderEmojiButtons() {
+        const container = document.getElementById("emoji-buttons-container");
+        if (!container) return;
+        container.innerHTML = "";
+
+        // Fixed "- " button (always first)
+        const dashBtn = document.createElement("button");
+        dashBtn.type = "button";
+        dashBtn.className = "btn-emoji btn-emoji-dash";
+        dashBtn.textContent = "-";
+        dashBtn.addEventListener("click", () => EntryForm.insertEmoji("- "));
+        container.appendChild(dashBtn);
+
+        // User's emoji buttons
+        for (const emoji of this.emojis) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "btn-emoji";
+            btn.textContent = emoji;
+            btn.addEventListener("click", () => EntryForm.insertEmoji(emoji));
+            container.appendChild(btn);
+        }
+    },
+
+    openModal() {
+        const inputs = document.querySelectorAll(".settings-emoji-input");
+        inputs.forEach((input, i) => {
+            input.value = this.emojis[i] || "";
+        });
+        document.getElementById("settings-modal").classList.remove("hidden");
+    },
+
+    closeModal() {
+        document.getElementById("settings-modal").classList.add("hidden");
+    },
+
+    async saveFromModal() {
+        const inputs = document.querySelectorAll(".settings-emoji-input");
+        const emojis = [];
+        inputs.forEach(input => {
+            const val = input.value.trim();
+            if (val) emojis.push(val);
+        });
+        if (emojis.length > 0) {
+            await this.save(emojis);
+        }
+        this.closeModal();
+    },
+
+    resetToDefault() {
+        const inputs = document.querySelectorAll(".settings-emoji-input");
+        inputs.forEach((input, i) => {
+            input.value = this.defaultEmojis[i] || "";
+        });
     }
 };
 
@@ -913,13 +1012,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-save-entry").addEventListener("click", () => EntryForm.save());
     document.getElementById("btn-delete-entry").addEventListener("click", () => EntryForm.remove());
 
-    // Emoji buttons
-    document.querySelectorAll(".btn-emoji").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const emoji = btn.getAttribute("data-emoji");
-            EntryForm.insertEmoji(emoji);
-        });
-    });
+    // Settings modal
+    document.getElementById("btn-settings").addEventListener("click", () => Settings.openModal());
+    document.getElementById("btn-close-settings").addEventListener("click", () => Settings.closeModal());
+    document.getElementById("btn-settings-save").addEventListener("click", () => Settings.saveFromModal());
+    document.getElementById("btn-settings-reset").addEventListener("click", () => Settings.resetToDefault());
 
     // Export modal
     document.getElementById("btn-close-export").addEventListener("click", () => TXTExport.closeModal());
@@ -966,6 +1063,11 @@ document.addEventListener("DOMContentLoaded", () => {
             Stats.closeModal();
         }
     });
+    document.getElementById("settings-modal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) {
+            Settings.closeModal();
+        }
+    });
 
     // Close modals on Escape
     document.addEventListener("keydown", (e) => {
@@ -973,6 +1075,7 @@ document.addEventListener("DOMContentLoaded", () => {
             EntryForm.close();
             TXTExport.closeModal();
             Stats.closeModal();
+            Settings.closeModal();
             document.getElementById("email-help-modal").classList.add("hidden");
         }
     });

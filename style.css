@@ -359,6 +359,14 @@ header h1 {
     transform: scale(0.95);
 }
 
+.btn-emoji-dash {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-style: dashed;
+}
+
 .modal-content textarea {
     width: 100%;
     min-height: 200px;
@@ -673,6 +681,41 @@ header h1 {
 .stat-card-heart {
     background: linear-gradient(135deg, var(--green-900), rgba(76, 175, 80, 0.1));
     border-color: var(--green-800);
+}
+
+/* Settings Modal */
+.modal-content-settings {
+    max-width: 400px;
+}
+
+.settings-emoji-inputs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.settings-emoji-input {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", sans-serif;
+    padding: 0;
+}
+
+.settings-emoji-input:focus {
+    border-color: var(--green-500);
+}
+
+.settings-actions {
+    justify-content: space-between;
 }
 
 /* Responsive */
