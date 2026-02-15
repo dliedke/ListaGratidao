@@ -7,7 +7,8 @@
       "Bash(findstr:*)",
       "Bash(firebase init:*)",
       "Bash(where:*)",
-      "Bash(firebase deploy:*)"
+      "Bash(firebase deploy:*)",
+      "Bash(ls:*)"
     ]
   }
 }

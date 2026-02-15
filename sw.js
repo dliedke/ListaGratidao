@@ -1,5 +1,5 @@
-const CACHE_NAME = "gratitude-v2";
-const APP_VERSION = "20260209-1";
+const CACHE_NAME = "gratitude-v4";
+const APP_VERSION = "20260215-2";
 const ASSETS = [
     "/",
     "/index.html",

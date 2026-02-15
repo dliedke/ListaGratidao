@@ -8,18 +8,18 @@
     "theme_color": "#1e1e1e",
     "icons": [
         {
-            "src": "favicon.svg?v=20260207-1",
+            "src": "favicon.svg?v=20260215-2",
             "sizes": "any",
             "type": "image/svg+xml",
             "purpose": "any"
         },
         {
-            "src": "icon-192x192.png?v=20260207-1",
+            "src": "icon-192x192.png?v=20260215-2",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "icon-512x512.png?v=20260207-1",
+            "src": "icon-512x512.png?v=20260215-2",
             "sizes": "512x512",
             "type": "image/png"
         }
