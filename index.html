@@ -7,9 +7,9 @@
     <meta name="theme-color" content="#1e1e1e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260215-2">
-    <link rel="apple-touch-icon" href="icon-192x192.png?v=20260215-2">
-    <link rel="manifest" href="manifest.json?v=20260215-2">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260222-4">
+    <link rel="apple-touch-icon" href="icon-192x192.png?v=20260222-4">
+    <link rel="manifest" href="manifest.json?v=20260222-4">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -78,7 +78,7 @@
 
         <!-- App icon (clickable for stats) -->
         <div style="text-align:center;padding:2rem;">
-            <img id="app-icon" src="favicon.svg?v=20260215-2" alt="Icon preview" style="width:128px;height:128px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <img id="app-icon" src="favicon.svg?v=20260222-4" alt="Icon preview" style="width:128px;height:128px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
     </div>
 
@@ -132,38 +132,12 @@
                 </div>
             </div>
             <div class="export-field export-field-email hidden" id="export-email-field">
-                <div class="email-label-row">
-                    <label for="export-email" data-i18n="emailLabel">Email destinatário</label>
-                    <button id="btn-email-help" class="btn-email-help hidden" data-i18n-title="emailHelpTooltip" title="Configurar email">?</button>
-                </div>
+                <label for="export-email" data-i18n="emailLabel">Email destinatário</label>
                 <input type="email" id="export-email" placeholder="exemplo@email.com">
             </div>
             <div class="modal-actions">
                 <button id="btn-export-txt" class="btn-save" data-i18n="downloadTXT">Baixar TXT</button>
                 <button id="btn-export-email" class="btn-save btn-email" data-i18n="sendEmail">Enviar por Email</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Email Help Modal (PC only) -->
-    <div id="email-help-modal" class="modal hidden">
-        <div class="modal-content modal-content-help">
-            <div class="modal-header">
-                <h3 class="modal-title-green" data-i18n="emailHelpTitle">Como configurar o mailto no Windows para abrir o Gmail no Chrome</h3>
-                <button id="btn-close-email-help" class="btn-close">&times;</button>
-            </div>
-            <div class="help-steps">
-                <div class="help-step">
-                    <h4 data-i18n="emailHelpStep1Title">1. Definir o Chrome como navegador padrão</h4>
-                    <p data-i18n-html="emailHelpStep1">Abra <strong>Configurações do Windows</strong> &rarr; <strong>Aplicativos</strong> &rarr; <strong>Aplicativos padrão</strong>. Em <strong>Navegador da Web</strong>, escolha <strong>Google Chrome</strong>.</p>
-                </div>
-                <div class="help-step">
-                    <h4 data-i18n="emailHelpStep2Title">2. Ativar o Gmail como manipulador de email no Chrome</h4>
-                    <p data-i18n-html="emailHelpStep2">Abra o Chrome e acesse <strong>mail.google.com</strong>. Faça login na sua conta. Na barra de endereço, procure o ícone de losango com um envelope (lado direito). Clique nele e selecione <strong>Permitir</strong>. Confirme o Gmail como aplicativo padrão para links de email.</p>
-                </div>
-            </div>
-            <div class="modal-actions">
-                <button id="btn-email-help-ok" class="btn-save" data-i18n="emailHelpClose">Entendi</button>
             </div>
         </div>
     </div>

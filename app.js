@@ -49,13 +49,7 @@ const I18n = {
             txtHeader: "Lista de Gratidão de {0} até {1}:",
             emailSubject: "Lista de Gratidão de {0} até {1}",
             dateDisplayFormat: "{day} de {month} de {year}",
-            emailHelpTooltip: "Configurar email",
-            emailHelpTitle: "Como configurar o mailto no Windows para abrir o Gmail no Chrome",
-            emailHelpStep1Title: "1. Definir o Chrome como navegador padrão",
-            emailHelpStep1: "Abra <strong>Configurações do Windows</strong> &rarr; <strong>Aplicativos</strong> &rarr; <strong>Aplicativos padrão</strong>. Em <strong>Navegador da Web</strong>, escolha <strong>Google Chrome</strong>.",
-            emailHelpStep2Title: "2. Ativar o Gmail como manipulador de email no Chrome",
-            emailHelpStep2: "Abra o Chrome e acesse <strong>mail.google.com</strong>. Faça login na sua conta. Na barra de endereço, procure o ícone de losango com um envelope (lado direito). Clique nele e selecione <strong>Permitir</strong>. Confirme o Gmail como aplicativo padrão para links de email.",
-            emailHelpClose: "Entendi",
+            emailCopied: "Texto copiado! Cole (Ctrl+V) no corpo do email.",
             settingsTitle: "Configurações",
             settingsEmojis: "Emojis rápidos",
             settingsTooltip: "Configurações",
@@ -106,13 +100,7 @@ const I18n = {
             txtHeader: "Gratitude List from {0} to {1}:",
             emailSubject: "Gratitude List from {0} to {1}",
             dateDisplayFormat: "{month} {day}, {year}",
-            emailHelpTooltip: "Email setup",
-            emailHelpTitle: "How to set up mailto on Windows to open Gmail in Chrome",
-            emailHelpStep1Title: "1. Set Chrome as your default browser",
-            emailHelpStep1: "Open <strong>Windows Settings</strong> &rarr; <strong>Apps</strong> &rarr; <strong>Default apps</strong>. Under <strong>Web browser</strong>, choose <strong>Google Chrome</strong>.",
-            emailHelpStep2Title: "2. Enable Gmail as the email handler in Chrome",
-            emailHelpStep2: "Open Chrome and go to <strong>mail.google.com</strong>. Sign in to your account. In the address bar, look for a diamond icon with an envelope (right side). Click it and select <strong>Allow</strong>. Confirm Gmail as the default app for email links.",
-            emailHelpClose: "Got it",
+            emailCopied: "Text copied! Paste (Ctrl+V) in the email body.",
             settingsTitle: "Settings",
             settingsEmojis: "Quick emojis",
             settingsTooltip: "Settings",
@@ -867,11 +855,11 @@ const TXTExport = {
         return weekdays[date.getDay()];
     },
 
-    generateText(entries, startDate, endDate) {
+    generateText(entries, startDate, endDate, includeHeader = true) {
         const startFmt = `${this._formatDate(startDate)} (${this._getWeekdayShort(startDate)})`;
         const endFmt = `${this._formatDate(endDate)} (${this._getWeekdayShort(endDate)})`;
 
-        let text = I18n.t("txtHeader").replace("{0}", startFmt).replace("{1}", endFmt) + "\r\n\r\n";
+        let text = includeHeader ? I18n.t("txtHeader").replace("{0}", startFmt).replace("{1}", endFmt) + "\r\n\r\n" : "";
 
         for (const entry of entries) {
             const weekday = this._getWeekdayName(entry.date);
@@ -881,11 +869,15 @@ const TXTExport = {
             text += `${weekday} (${dateFmt})\r\n`;
             text += `________________________________________________________\r\n\r\n`;
 
-            // Add "- " prefix to each line
-            const lines = entry.content.split("\n").filter(l => l.trim());
+            // Add "- " prefix to each line, preserving blank lines
+            const lines = entry.content.split("\n");
             for (const line of lines) {
                 const trimmed = line.trim();
-                text += trimmed.startsWith("- ") ? trimmed + "\r\n" : `- ${trimmed}\r\n`;
+                if (!trimmed) {
+                    text += "\r\n";
+                } else {
+                    text += trimmed.startsWith("- ") ? trimmed + "\r\n" : `- ${trimmed}\r\n`;
+                }
             }
             text += "\r\n";
         }
@@ -955,11 +947,18 @@ const TXTExport = {
 
         const startFmt = `${this._formatDate(data.startDate)} (${this._getWeekdayShort(data.startDate)})`;
         const endFmt = `${this._formatDate(data.endDate)} (${this._getWeekdayShort(data.endDate)})`;
-        const text = this.generateText(data.entries, data.startDate, data.endDate);
+        const text = this.generateText(data.entries, data.startDate, data.endDate, false);
 
+        // Copy text to clipboard
+        await navigator.clipboard.writeText(text);
+
+        // Show paste instruction before opening Gmail
+        alert(I18n.t("emailCopied"));
+
+        // Open Gmail compose with to + subject pre-filled
         const subject = encodeURIComponent(I18n.t("emailSubject").replace("{0}", startFmt).replace("{1}", endFmt));
-        const body = encodeURIComponent(text);
-        window.open(`mailto:${email}?subject=${subject}&body=${body}`, "_blank");
+        const to = encodeURIComponent(email);
+        window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${subject}`, "_blank");
         this.closeModal();
     }
 };
@@ -1027,21 +1026,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("app-icon").addEventListener("click", () => Stats.showModal());
     document.getElementById("btn-close-stats").addEventListener("click", () => Stats.closeModal());
 
-    // Email help (PC only — show button if not mobile/tablet)
-    const isPC = !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isPC) {
-        document.getElementById("btn-email-help").classList.remove("hidden");
-    }
-    document.getElementById("btn-email-help").addEventListener("click", () => {
-        document.getElementById("email-help-modal").classList.remove("hidden");
-    });
-    document.getElementById("btn-close-email-help").addEventListener("click", () => {
-        document.getElementById("email-help-modal").classList.add("hidden");
-    });
-    document.getElementById("btn-email-help-ok").addEventListener("click", () => {
-        document.getElementById("email-help-modal").classList.add("hidden");
-    });
-
     // Close modals on overlay click
     document.getElementById("entry-modal").addEventListener("click", (e) => {
         if (e.target === e.currentTarget) {
@@ -1051,11 +1035,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("export-modal").addEventListener("click", (e) => {
         if (e.target === e.currentTarget) {
             TXTExport.closeModal();
-        }
-    });
-    document.getElementById("email-help-modal").addEventListener("click", (e) => {
-        if (e.target === e.currentTarget) {
-            e.currentTarget.classList.add("hidden");
         }
     });
     document.getElementById("stats-modal").addEventListener("click", (e) => {
@@ -1076,7 +1055,6 @@ document.addEventListener("DOMContentLoaded", () => {
             TXTExport.closeModal();
             Stats.closeModal();
             Settings.closeModal();
-            document.getElementById("email-help-modal").classList.add("hidden");
         }
     });
 
