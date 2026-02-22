@@ -50,6 +50,9 @@ const I18n = {
             emailSubject: "Lista de Gratidão de {0} até {1}",
             dateDisplayFormat: "{day} de {month} de {year}",
             emailCopied: "Texto copiado! Cole (Ctrl+V) no corpo do email.",
+            emailCopiedMobile: "Texto copiado! Escolha como enviar:",
+            openGmail: "Abrir Gmail",
+            openEmailApp: "App de email",
             settingsTitle: "Configurações",
             settingsEmojis: "Emojis rápidos",
             settingsTooltip: "Configurações",
@@ -101,6 +104,9 @@ const I18n = {
             emailSubject: "Gratitude List from {0} to {1}",
             dateDisplayFormat: "{month} {day}, {year}",
             emailCopied: "Text copied! Paste (Ctrl+V) in the email body.",
+            emailCopiedMobile: "Text copied! Choose how to send:",
+            openGmail: "Open Gmail",
+            openEmailApp: "Email app",
             settingsTitle: "Settings",
             settingsEmojis: "Quick emojis",
             settingsTooltip: "Settings",
@@ -818,6 +824,9 @@ const TXTExport = {
         document.getElementById("export-modal").classList.add("hidden");
         document.getElementById("export-email-field").classList.add("hidden");
         document.getElementById("export-email").value = "";
+        document.getElementById("export-mailto-wrapper").classList.add("hidden");
+        document.getElementById("export-mailto-link").href = "#";
+        document.getElementById("export-gmail-link").href = "#";
     },
 
     _toISO(date) {
@@ -949,16 +958,30 @@ const TXTExport = {
         const endFmt = `${this._formatDate(data.endDate)} (${this._getWeekdayShort(data.endDate)})`;
         const text = this.generateText(data.entries, data.startDate, data.endDate, false);
 
-        // Copy text to clipboard
-        await navigator.clipboard.writeText(text);
-
-        // Show paste instruction before opening Gmail
-        alert(I18n.t("emailCopied"));
-
-        // Open Gmail compose with to + subject pre-filled
         const subject = encodeURIComponent(I18n.t("emailSubject").replace("{0}", startFmt).replace("{1}", endFmt));
-        const to = encodeURIComponent(email);
-        window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${subject}`, "_blank");
+        const isMobile = navigator.maxTouchPoints > 0;
+
+        if (isMobile) {
+            // On mobile: show a visible tappable mailto link inside the modal.
+            // Programmatic triggers (window.location.href, anchor.click()) are
+            // intercepted by Chrome Android and open Gmail web instead of the app.
+            // A real user tap on a visible <a> goes through the OS intent system correctly.
+            try { await navigator.clipboard.writeText(text); } catch (e) { /* clipboard not critical on mobile */ }
+            const mailtoLink = document.getElementById("export-mailto-link");
+            const mailtoWrapper = document.getElementById("export-mailto-wrapper");
+            const gmailLink = document.getElementById("export-gmail-link");
+            if (mailtoWrapper) {
+                if (mailtoLink) mailtoLink.href = `mailto:${email}?subject=${subject}`;
+                if (gmailLink) gmailLink.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}`;
+                mailtoWrapper.classList.remove("hidden");
+            }
+            // Don't close modal — user must tap the link
+        } else {
+            // On PC: copy text to clipboard then open Gmail compose in new tab
+            await navigator.clipboard.writeText(text);
+            alert(I18n.t("emailCopied"));
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}`, "_blank");
+        }
         this.closeModal();
     }
 };

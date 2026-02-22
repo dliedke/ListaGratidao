@@ -7,9 +7,9 @@
     <meta name="theme-color" content="#1e1e1e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260222-4">
-    <link rel="apple-touch-icon" href="icon-192x192.png?v=20260222-4">
-    <link rel="manifest" href="manifest.json?v=20260222-4">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260222-12">
+    <link rel="apple-touch-icon" href="icon-192x192.png?v=20260222-12">
+    <link rel="manifest" href="manifest.json?v=20260222-12">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -78,7 +78,7 @@
 
         <!-- App icon (clickable for stats) -->
         <div style="text-align:center;padding:2rem;">
-            <img id="app-icon" src="favicon.svg?v=20260222-4" alt="Icon preview" style="width:128px;height:128px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <img id="app-icon" src="favicon.svg?v=20260222-12" alt="Icon preview" style="width:128px;height:128px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
     </div>
 
@@ -134,6 +134,11 @@
             <div class="export-field export-field-email hidden" id="export-email-field">
                 <label for="export-email" data-i18n="emailLabel">Email destinatário</label>
                 <input type="email" id="export-email" placeholder="exemplo@email.com">
+                <div id="export-mailto-wrapper" class="hidden export-mailto-wrapper">
+                    <p class="export-mailto-hint" data-i18n="emailCopiedMobile">Texto copiado! Escolha como enviar:</p>
+                    <a id="export-gmail-link" href="#" class="btn-save export-mailto-link" data-i18n="openGmail" target="_blank">Abrir Gmail</a>
+                    <a id="export-mailto-link" href="#" class="btn-save btn-email export-mailto-link" data-i18n="openEmailApp">App de email</a>
+                </div>
             </div>
             <div class="modal-actions">
                 <button id="btn-export-txt" class="btn-save" data-i18n="downloadTXT">Baixar TXT</button>

@@ -47,7 +47,7 @@ All code lives in `app.js` as plain JavaScript modules using the revealing modul
 | `Calendar` | Renders monthly calendar grid, shows entry dots, navigates months |
 | `EntryForm` | Modal editor for gratitude entries — open, save, delete, emoji insertion |
 | `CSVExport` | Downloads all entries as CSV (Presently-compatible format) |
-| `TXTExport` | Exports date range as formatted TXT file or via mailto email |
+| `TXTExport` | Exports date range as formatted TXT file or via Gmail compose (opens in new tab) |
 | `Router` | Hash-based routing — `#export` triggers CSV export |
 
 Initialization happens in `DOMContentLoaded` at the bottom of app.js, wiring all event listeners.
@@ -133,6 +133,9 @@ The `firebase.json` sets `public: "."` (root directory) and ignores `node_module
 - Modal open/close is done by toggling the `.hidden` class on modal elements
 - Overlay click and Escape key close all modals
 - Emoji insertion uses `textarea.selectionStart/End` for cursor-aware insertion
+- **Email flow (`TXTExport.sendEmail`):** behavior differs by platform, detected via `navigator.userAgent`:
+  - **PC:** copies text to clipboard, shows paste instruction, opens Gmail compose URL in a new tab (`window.open`)
+  - **Mobile:** uses `mailto:` (to + subject only, no body) to hand off to the native email app — `window.open` after `await` is blocked on mobile browsers because the user gesture is no longer active
 
 ## Code Style
 
