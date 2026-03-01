@@ -1028,6 +1028,26 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-prev-month").addEventListener("click", () => Calendar.prev());
     document.getElementById("btn-next-month").addEventListener("click", () => Calendar.next());
 
+    // Calendar swipe gesture (mobile)
+    const calendarContainer = document.querySelector(".calendar-container");
+    let swipeTouchStartX = 0;
+    let swipeTouchStartY = 0;
+    calendarContainer.addEventListener("touchstart", (e) => {
+        swipeTouchStartX = e.changedTouches[0].clientX;
+        swipeTouchStartY = e.changedTouches[0].clientY;
+    }, { passive: true });
+    calendarContainer.addEventListener("touchend", (e) => {
+        const deltaX = e.changedTouches[0].clientX - swipeTouchStartX;
+        const deltaY = e.changedTouches[0].clientY - swipeTouchStartY;
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+            if (deltaX < 0) {
+                Calendar.next();
+            } else {
+                Calendar.prev();
+            }
+        }
+    }, { passive: true });
+
     // Modal
     document.getElementById("btn-close-modal").addEventListener("click", () => EntryForm.close());
     document.getElementById("btn-cancel-entry").addEventListener("click", () => EntryForm.close());
