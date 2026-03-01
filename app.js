@@ -57,7 +57,8 @@ const I18n = {
             settingsEmojis: "Emojis rápidos",
             settingsTooltip: "Configurações",
             settingsSave: "Salvar",
-            settingsReset: "Restaurar padrão"
+            settingsReset: "Restaurar padrão",
+            monthTotalEntries: "{0} entrada(s) em {1}"
         },
         en: {
             appTitle: "Gratitude Journal",
@@ -111,7 +112,8 @@ const I18n = {
             settingsEmojis: "Quick emojis",
             settingsTooltip: "Settings",
             settingsSave: "Save",
-            settingsReset: "Reset to default"
+            settingsReset: "Reset to default",
+            monthTotalEntries: "{0} entries in {1}"
         }
     },
 
@@ -476,8 +478,10 @@ const Stats = {
             }
             bestStreak = Math.max(bestStreak, tempStreak);
 
-            // Total entries
-            const totalEntries = entries.length;
+            // Total entries — count individual non-empty lines across all entries
+            const totalEntries = entries.reduce((sum, e) => {
+                return sum + e.content.split("\n").filter(l => l.trim()).length;
+            }, 0);
 
             // This month
             const now = new Date();
@@ -509,7 +513,7 @@ const Stats = {
             const totalReasons = entries.reduce((sum, e) => {
                 return sum + e.content.split("\n").filter(l => l.trim()).length;
             }, 0);
-            const avgReasonsPerDay = (totalReasons / totalEntries).toFixed(1);
+            const avgReasonsPerDay = (totalReasons / entries.length).toFixed(1);
 
             return {
                 currentStreak,
@@ -626,6 +630,25 @@ const Calendar = {
 
             btn.addEventListener("click", () => EntryForm.open(dateStr));
             grid.appendChild(btn);
+        }
+
+        // Month total entries count
+        let monthTotal = 0;
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${this.year}-${String(this.month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            if (this.entries[dateStr]) {
+                monthTotal += this.entries[dateStr].split("\n").filter(l => l.trim()).length;
+            }
+        }
+        const monthTotalEl = document.getElementById("month-total");
+        if (monthTotal > 0) {
+            const label = I18n.t("monthTotalEntries")
+                .replace("{0}", monthTotal)
+                .replace("{1}", monthNames[this.month]);
+            monthTotalEl.textContent = label;
+            monthTotalEl.classList.remove("hidden");
+        } else {
+            monthTotalEl.classList.add("hidden");
         }
     },
 
