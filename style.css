@@ -340,6 +340,7 @@ header h1 {
     gap: 0.5rem;
     margin-bottom: 0.75rem;
     flex-wrap: wrap;
+    justify-content: flex-start;
 }
 
 .btn-emoji {
@@ -658,7 +659,7 @@ a.export-mailto-link {
 
 /* Settings Modal */
 .modal-content-settings {
-    max-width: 400px;
+    max-width: 550px;
 }
 
 .settings-emoji-inputs {
@@ -723,6 +724,26 @@ a.export-mailto-link {
 
     .modal-content textarea {
         min-height: 150px;
+    }
+
+    .btn-emoji {
+        width: 38px;
+        height: 38px;
+        font-size: 1.5rem;
+    }
+
+    .emoji-buttons {
+        gap: 0.35rem;
+    }
+
+    .settings-emoji-input {
+        width: 38px;
+        height: 38px;
+        font-size: 1.25rem;
+    }
+
+    .settings-emoji-inputs {
+        gap: 0.35rem;
     }
 
     .stats-grid {

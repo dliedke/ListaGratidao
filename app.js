@@ -258,7 +258,7 @@ const DB = {
 // Settings Module — User preferences (emoji buttons)
 // ============================================================
 const Settings = {
-    defaultEmojis: ["❤️", "🙏", "✨", "🌟", "💚"],
+    defaultEmojis: ["❤️", "🙏", "✨", "🌟", "💚", "😊", "🌈", "☀️", "🎉", "💪"],
     emojis: [],
 
     _settingsRef() {
