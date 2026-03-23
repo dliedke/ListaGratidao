@@ -11,8 +11,8 @@ A personal gratitude journal web app. Record daily reasons for gratitude, view t
 - **Export via Email** - Send your gratitude list to any email address using a mailto link
 - **Internationalization (i18n)** - Automatic language detection (Portuguese and English) based on browser settings
 - **Dark Theme** - Dark UI designed for comfortable daily use
+- **Biometric Lock** - Optional fingerprint/Face ID lock for mobile devices (WebAuthn). Enable in Settings to require biometric verification before accessing the app
 - **Responsive Design** - Works on desktop and mobile devices
-- **Email Setup Help** - Built-in guide for configuring mailto on Windows (shown only on desktop)
 
 ## Tech Stack
 
@@ -26,7 +26,7 @@ A personal gratitude journal web app. Record daily reasons for gratitude, view t
 
 ```
 index.html          Main HTML page
-app.js              Application logic (I18n, Auth, DB, Calendar, EntryForm, TXTExport, CSVExport, Router)
+app.js              Application logic (I18n, Auth, DB, Biometric, Calendar, EntryForm, TXTExport, CSVExport, Router)
 style.css           Styles (dark theme, responsive)
 favicon.svg         Site icon
 firebase-config.js  Firebase project configuration
