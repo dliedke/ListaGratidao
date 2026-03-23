@@ -58,7 +58,14 @@ const I18n = {
             settingsTooltip: "Configurações",
             settingsSave: "Salvar",
             settingsReset: "Restaurar padrão",
-            monthTotalEntries: "{0} entrada(s) em {1}"
+            monthTotalEntries: "{0} entrada(s) em {1}",
+            biometricUnlockPrompt: "Desbloqueie para continuar",
+            biometricUnlock: "Desbloquear com biometria",
+            biometricFallback: "Entrar com Google",
+            settingsBiometric: "Bloqueio biométrico",
+            settingsBiometricDesc: "Exigir impressão digital ou Face ID para acessar",
+            biometricEnable: "Ativar",
+            biometricDisable: "Desativar"
         },
         en: {
             appTitle: "Gratitude Journal",
@@ -113,7 +120,14 @@ const I18n = {
             settingsTooltip: "Settings",
             settingsSave: "Save",
             settingsReset: "Reset to default",
-            monthTotalEntries: "{0} entries in {1}"
+            monthTotalEntries: "{0} entries in {1}",
+            biometricUnlockPrompt: "Unlock to continue",
+            biometricUnlock: "Unlock with biometrics",
+            biometricFallback: "Sign in with Google",
+            settingsBiometric: "Biometric lock",
+            settingsBiometricDesc: "Require fingerprint or Face ID to access",
+            biometricEnable: "Enable",
+            biometricDisable: "Disable"
         }
     },
 
@@ -164,13 +178,22 @@ const Auth = {
             Auth.currentUser = user;
             if (user) {
                 document.getElementById("login-screen").classList.add("hidden");
-                document.getElementById("app-screen").classList.remove("hidden");
-                Settings.load();
-                Calendar.load();
-                Router.check();
+                if (Biometric.isEnabled() && !Biometric.sessionUnlocked) {
+                    Biometric.showLockScreen();
+                    Settings.load();
+                    setTimeout(() => Biometric.autoUnlock(), 300);
+                } else {
+                    document.getElementById("lock-screen").classList.add("hidden");
+                    document.getElementById("app-screen").classList.remove("hidden");
+                    Settings.load();
+                    Calendar.load();
+                    Router.check();
+                }
             } else {
                 document.getElementById("login-screen").classList.remove("hidden");
                 document.getElementById("app-screen").classList.add("hidden");
+                document.getElementById("lock-screen").classList.add("hidden");
+                Biometric.sessionUnlocked = false;
             }
         });
     },
@@ -309,16 +332,59 @@ const Settings = {
         }
     },
 
-    openModal() {
+    async openModal() {
         const inputs = document.querySelectorAll(".settings-emoji-input");
         inputs.forEach((input, i) => {
             input.value = this.emojis[i] || "";
         });
+
+        // Show biometric option if device supports it
+        const biometricSetting = document.getElementById("biometric-setting");
+        const biometricDivider = document.getElementById("biometric-divider");
+        if (biometricSetting) {
+            const available = await Biometric.isAvailable();
+            if (available) {
+                biometricSetting.classList.remove("hidden");
+                biometricDivider.classList.remove("hidden");
+                this.updateBiometricToggle();
+            } else {
+                biometricSetting.classList.add("hidden");
+                biometricDivider.classList.add("hidden");
+            }
+        }
+
         document.getElementById("settings-modal").classList.remove("hidden");
     },
 
     closeModal() {
         document.getElementById("settings-modal").classList.add("hidden");
+    },
+
+    updateBiometricToggle() {
+        const btn = document.getElementById("btn-biometric-toggle");
+        if (!btn) return;
+        if (Biometric.isEnabled()) {
+            btn.textContent = I18n.t("biometricDisable");
+            btn.classList.add("btn-biometric-active");
+        } else {
+            btn.textContent = I18n.t("biometricEnable");
+            btn.classList.remove("btn-biometric-active");
+        }
+    },
+
+    async toggleBiometric() {
+        const btn = document.getElementById("btn-biometric-toggle");
+        if (Biometric.isEnabled()) {
+            Biometric.disable();
+            this.updateBiometricToggle();
+        } else {
+            btn.disabled = true;
+            const success = await Biometric.register();
+            btn.disabled = false;
+            if (success) {
+                this.updateBiometricToggle();
+            }
+        }
     },
 
     async saveFromModal() {
@@ -338,6 +404,140 @@ const Settings = {
         const inputs = document.querySelectorAll(".settings-emoji-input");
         inputs.forEach((input, i) => {
             input.value = this.defaultEmojis[i] || "";
+        });
+    }
+};
+
+// ============================================================
+// Biometric Module — Fingerprint/Face ID lock (WebAuthn)
+// ============================================================
+const Biometric = {
+    sessionUnlocked: false,
+
+    async isAvailable() {
+        if (!window.PublicKeyCredential) return false;
+        try {
+            return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        } catch {
+            return false;
+        }
+    },
+
+    isEnabled() {
+        return localStorage.getItem("biometricEnabled") === "true";
+    },
+
+    async register() {
+        if (!Auth.currentUser) return false;
+        try {
+            const challenge = crypto.getRandomValues(new Uint8Array(32));
+            const userId = new TextEncoder().encode(Auth.currentUser.uid);
+
+            const credential = await navigator.credentials.create({
+                publicKey: {
+                    challenge,
+                    rp: {
+                        name: "Diário da Gratidão",
+                        id: window.location.hostname
+                    },
+                    user: {
+                        id: userId,
+                        name: Auth.currentUser.email || "user",
+                        displayName: Auth.currentUser.displayName || "User"
+                    },
+                    pubKeyCredParams: [
+                        { alg: -7, type: "public-key" },
+                        { alg: -257, type: "public-key" }
+                    ],
+                    authenticatorSelection: {
+                        authenticatorAttachment: "platform",
+                        userVerification: "required",
+                        residentKey: "preferred"
+                    },
+                    timeout: 60000,
+                    attestation: "none"
+                }
+            });
+
+            const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+            localStorage.setItem("biometricEnabled", "true");
+            localStorage.setItem("biometricCredentialId", credentialId);
+            return true;
+        } catch (e) {
+            console.error("Biometric registration failed:", e);
+            return false;
+        }
+    },
+
+    async verify() {
+        const credentialId = localStorage.getItem("biometricCredentialId");
+        if (!credentialId) return false;
+        try {
+            const challenge = crypto.getRandomValues(new Uint8Array(32));
+            const rawId = Uint8Array.from(atob(credentialId), c => c.charCodeAt(0));
+
+            await navigator.credentials.get({
+                publicKey: {
+                    challenge,
+                    allowCredentials: [{
+                        id: rawId,
+                        type: "public-key",
+                        transports: ["internal"]
+                    }],
+                    userVerification: "required",
+                    timeout: 60000
+                }
+            });
+            return true;
+        } catch (e) {
+            console.error("Biometric verification failed:", e);
+            return false;
+        }
+    },
+
+    disable() {
+        localStorage.removeItem("biometricEnabled");
+        localStorage.removeItem("biometricCredentialId");
+    },
+
+    showLockScreen() {
+        document.getElementById("lock-screen").classList.remove("hidden");
+        document.getElementById("login-screen").classList.add("hidden");
+        document.getElementById("app-screen").classList.add("hidden");
+    },
+
+    hideLockScreen() {
+        document.getElementById("lock-screen").classList.add("hidden");
+    },
+
+    async unlock() {
+        const btn = document.getElementById("btn-biometric-unlock");
+        btn.disabled = true;
+        const success = await this.verify();
+        btn.disabled = false;
+        if (success) {
+            this.sessionUnlocked = true;
+            this.hideLockScreen();
+            document.getElementById("app-screen").classList.remove("hidden");
+            Calendar.load();
+            Router.check();
+        }
+    },
+
+    async autoUnlock() {
+        try {
+            await this.unlock();
+        } catch (e) {
+            // User cancelled or failed — stay on lock screen
+        }
+    },
+
+    fallbackGoogleLogin() {
+        this.sessionUnlocked = true;
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(err => {
+            this.sessionUnlocked = false;
+            console.error("Fallback login error:", err);
         });
     }
 };
@@ -1091,6 +1291,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Stats modal
     document.getElementById("app-icon").addEventListener("click", () => Stats.showModal());
     document.getElementById("btn-close-stats").addEventListener("click", () => Stats.closeModal());
+
+    // Biometric lock screen
+    document.getElementById("btn-biometric-unlock").addEventListener("click", () => Biometric.unlock());
+    document.getElementById("btn-biometric-fallback").addEventListener("click", () => Biometric.fallbackGoogleLogin());
+
+    // Biometric toggle in settings
+    document.getElementById("btn-biometric-toggle").addEventListener("click", () => Settings.toggleBiometric());
 
     // Close modals on overlay click
     document.getElementById("entry-modal").addEventListener("click", (e) => {

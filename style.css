@@ -692,6 +692,117 @@ a.export-mailto-link {
     justify-content: space-between;
 }
 
+/* Lock Screen (Biometric) */
+#lock-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-primary);
+}
+
+.lock-icon {
+    color: var(--green-400);
+    margin-bottom: 1.5rem;
+}
+
+.btn-biometric {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--green-600);
+    border-radius: var(--radius);
+    background: var(--green-900);
+    color: var(--green-400);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 1rem;
+}
+
+.btn-biometric:hover {
+    background: var(--green-800);
+}
+
+.btn-biometric:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0.5rem;
+}
+
+.btn-link:hover {
+    color: var(--text-primary);
+}
+
+/* Biometric Settings */
+.settings-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+}
+
+.biometric-setting label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.biometric-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.biometric-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.btn-biometric-toggle {
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--green-600);
+    border-radius: var(--radius);
+    background: var(--green-900);
+    color: var(--green-400);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.btn-biometric-toggle:hover {
+    background: var(--green-800);
+}
+
+.btn-biometric-toggle:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-biometric-toggle.btn-biometric-active {
+    background: rgba(239, 83, 80, 0.1);
+    border-color: var(--red-400);
+    color: var(--red-400);
+}
+
+.btn-biometric-toggle.btn-biometric-active:hover {
+    background: rgba(239, 83, 80, 0.2);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .modal-content {
