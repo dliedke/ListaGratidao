@@ -1032,13 +1032,12 @@ const TXTExport = {
         const startInput = document.getElementById("export-date-start");
         const endInput = document.getElementById("export-date-end");
 
-        // Default: first and last day of current month
+        // Default: last 6 days (e.g. if today is Tuesday, from last Wednesday to today)
         const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const sixDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
 
-        startInput.value = this._toISO(firstDay);
-        endInput.value = this._toISO(lastDay);
+        startInput.value = this._toISO(sixDaysAgo);
+        endInput.value = this._toISO(now);
 
         modal.classList.remove("hidden");
     },
