@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Adventure Tracker - Live</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" />
+    <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            background: #1a1a2e;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
+            overflow: hidden;
+        }
+        #map {
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+        }
+
+        /* Top bar: sport + live badge */
+        #top-bar {
+            position: absolute; top: 0; left: 0; right: 0;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px;
+            background: linear-gradient(to bottom, rgba(26,26,46,0.9), transparent);
+            z-index: 10; pointer-events: none;
+        }
+        #sport-label {
+            font-size: 16px; font-weight: 600;
+            flex-shrink: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-right: 10px;
+        }
+        #live-badge {
+            background: #00ff88; color: #1a1a2e;
+            font-size: 11px; font-weight: 700;
+            padding: 4px 10px; border-radius: 12px;
+            display: flex; align-items: center; gap: 5px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        #live-badge.ended { background: #ff4757; color: #fff; }
+        #live-badge.waiting { background: #ffa502; color: #1a1a2e; }
+        .pulse-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #1a1a2e;
+            animation: pulse 1.5s infinite;
+        }
+        .pulse-dot.ended { animation: none; background: #fff; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.7); }
+        }
+
+        /* Bottom stats panel */
+        #stats-panel {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            display: flex; justify-content: space-around;
+            padding: 14px 10px 20px;
+            background: linear-gradient(to top, rgba(26,26,46,0.95), rgba(26,26,46,0.85), transparent);
+            z-index: 10; pointer-events: none;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 22px; font-weight: 700;
+            color: #00d4ff;
+        }
+        .stat-label {
+            font-size: 10px; font-weight: 500;
+            color: #888; text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* Last updated */
+        #updated-label {
+            position: absolute; bottom: 80px; left: 0; right: 0;
+            text-align: center; font-size: 10px; color: #666;
+            z-index: 10; pointer-events: none;
+        }
+
+        /* Loading / error states */
+        #overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #1a1a2e; z-index: 100;
+            text-align: center; padding: 20px;
+        }
+        #overlay.hidden { display: none; }
+        #overlay h2 { color: #00d4ff; margin-bottom: 10px; font-size: 20px; }
+        #overlay p { color: #888; font-size: 14px; line-height: 1.6; }
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid #333;
+            border-top-color: #00d4ff; border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Ended banner */
+        #ended-banner {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26,26,46,0.92);
+            border: 1px solid #ff4757;
+            border-radius: 16px; padding: 20px 30px;
+            text-align: center; z-index: 20;
+            display: none;
+        }
+        #ended-banner h3 { color: #ff4757; font-size: 18px; margin-bottom: 6px; }
+        #ended-banner p { color: #888; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <!-- Loading overlay -->
+    <div id="overlay">
+        <div class="spinner"></div>
+        <h2>Adventure Tracker</h2>
+        <p id="overlay-text"></p>
+    </div>
+
+    <!-- Map -->
+    <div id="map"></div>
+
+    <!-- Top bar -->
+    <div id="top-bar">
+        <span id="sport-label"></span>
+        <div id="live-badge">
+            <div class="pulse-dot"></div>
+            <span id="badge-text"></span>
+        </div>
+    </div>
+
+    <!-- Bottom stats -->
+    <div id="stats-panel">
+        <div class="stat">
+            <div class="stat-value" id="stat-distance">--</div>
+            <div class="stat-label" id="label-distance"></div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="stat-elapsed">--:--</div>
+            <div class="stat-label" id="label-time"></div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="stat-pace">--</div>
+            <div class="stat-label" id="pace-label"></div>
+        </div>
+    </div>
+
+    <div id="updated-label"></div>
+
+    <!-- Workout ended banner -->
+    <div id="ended-banner">
+        <h3 id="ended-title"></h3>
+        <p id="ended-text"></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+        // ---- CONFIG ----
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyD_xVBC5US7H005CjpFlmF5NMkuGgT1xlY",
+            authDomain: "listagratidao.firebaseapp.com",
+            databaseURL: "https://listagratidao-default-rtdb.firebaseio.com",
+            projectId: "listagratidao"
+        };
+        const MAPTILER_KEY = "ddppYDfqpCDEi6XMhMBn";
+        // ---- END CONFIG ----
+
+        // ---- LOCALIZATION ----
+        const STRINGS = {
+            en: {
+                connecting: "Connecting to live session...",
+                noSession: "No session ID provided. Check the link and try again.",
+                notFound: "Session not found or expired.",
+                waitingGps: "Waiting for GPS signal...",
+                connectionError: "Connection error. Please refresh the page.",
+                live: "LIVE",
+                ended: "ENDED",
+                paused: "PAUSED",
+                waiting: "WAITING",
+                distance: "Distance",
+                time: "Time",
+                pace: "Pace",
+                speed: "Speed",
+                workoutEnded: "Workout Ended",
+                sessionFinished: "This session has finished.",
+                updatedNow: "Updated just now",
+                updatedSec: "Updated {0}s ago",
+                updatedMin: "Updated {0}m ago",
+                swim: "Open Water Swim",
+                walk: "Walk",
+                run: "Run",
+                cycling: "Cycling"
+            },
+            es: {
+                connecting: "Conectando a la sesión en vivo...",
+                noSession: "No se proporcionó ID de sesión. Verifica el enlace.",
+                notFound: "Sesión no encontrada o expirada.",
+                waitingGps: "Esperando señal GPS...",
+                connectionError: "Error de conexión. Actualiza la página.",
+                live: "EN VIVO",
+                ended: "FINALIZADO",
+                paused: "PAUSADO",
+                waiting: "ESPERANDO",
+                distance: "Distancia",
+                time: "Tiempo",
+                pace: "Ritmo",
+                speed: "Velocidad",
+                workoutEnded: "Entrenamiento finalizado",
+                sessionFinished: "Esta sesión ha terminado.",
+                updatedNow: "Actualizado ahora",
+                updatedSec: "Actualizado hace {0}s",
+                updatedMin: "Actualizado hace {0}m",
+                swim: "Natación en aguas abiertas",
+                walk: "Caminata",
+                run: "Carrera",
+                cycling: "Ciclismo"
+            },
+            fr: {
+                connecting: "Connexion à la session en direct...",
+                noSession: "Aucun ID de session fourni. Vérifiez le lien.",
+                notFound: "Session introuvable ou expirée.",
+                waitingGps: "En attente du signal GPS...",
+                connectionError: "Erreur de connexion. Rafraîchissez la page.",
+                live: "EN DIRECT",
+                ended: "TERMINÉ",
+                paused: "EN PAUSE",
+                waiting: "EN ATTENTE",
+                distance: "Distance",
+                time: "Temps",
+                pace: "Allure",
+                speed: "Vitesse",
+                workoutEnded: "Entraînement terminé",
+                sessionFinished: "Cette session est terminée.",
+                updatedNow: "Mis à jour à l'instant",
+                updatedSec: "Mis à jour il y a {0}s",
+                updatedMin: "Mis à jour il y a {0}m",
+                swim: "Nage en eau libre",
+                walk: "Marche",
+                run: "Course",
+                cycling: "Cyclisme"
+            },
+            de: {
+                connecting: "Verbindung zur Live-Sitzung...",
+                noSession: "Keine Sitzungs-ID angegeben. Überprüfe den Link.",
+                notFound: "Sitzung nicht gefunden oder abgelaufen.",
+                waitingGps: "Warte auf GPS-Signal...",
+                connectionError: "Verbindungsfehler. Seite neu laden.",
+                live: "LIVE",
+                ended: "BEENDET",
+                paused: "PAUSIERT",
+                waiting: "WARTEN",
+                distance: "Distanz",
+                time: "Zeit",
+                pace: "Tempo",
+                speed: "Geschwindigkeit",
+                workoutEnded: "Training beendet",
+                sessionFinished: "Diese Sitzung ist beendet.",
+                updatedNow: "Gerade aktualisiert",
+                updatedSec: "Vor {0}s aktualisiert",
+                updatedMin: "Vor {0}m aktualisiert",
+                swim: "Freiwasserschwimmen",
+                walk: "Gehen",
+                run: "Laufen",
+                cycling: "Radfahren"
+            },
+            it: {
+                connecting: "Connessione alla sessione in diretta...",
+                noSession: "Nessun ID sessione fornito. Controlla il link.",
+                notFound: "Sessione non trovata o scaduta.",
+                waitingGps: "In attesa del segnale GPS...",
+                connectionError: "Errore di connessione. Aggiorna la pagina.",
+                live: "IN DIRETTA",
+                ended: "TERMINATO",
+                paused: "IN PAUSA",
+                waiting: "IN ATTESA",
+                distance: "Distanza",
+                time: "Tempo",
+                pace: "Passo",
+                speed: "Velocità",
+                workoutEnded: "Allenamento terminato",
+                sessionFinished: "Questa sessione è terminata.",
+                updatedNow: "Aggiornato ora",
+                updatedSec: "Aggiornato {0}s fa",
+                updatedMin: "Aggiornato {0}m fa",
+                swim: "Nuoto in acque libere",
+                walk: "Camminata",
+                run: "Corsa",
+                cycling: "Ciclismo"
+            },
+            nl: {
+                connecting: "Verbinden met live sessie...",
+                noSession: "Geen sessie-ID opgegeven. Controleer de link.",
+                notFound: "Sessie niet gevonden of verlopen.",
+                waitingGps: "Wachten op GPS-signaal...",
+                connectionError: "Verbindingsfout. Vernieuw de pagina.",
+                live: "LIVE",
+                ended: "BEËINDIGD",
+                paused: "GEPAUZEERD",
+                waiting: "WACHTEN",
+                distance: "Afstand",
+                time: "Tijd",
+                pace: "Tempo",
+                speed: "Snelheid",
+                workoutEnded: "Training beëindigd",
+                sessionFinished: "Deze sessie is afgelopen.",
+                updatedNow: "Zojuist bijgewerkt",
+                updatedSec: "{0}s geleden bijgewerkt",
+                updatedMin: "{0}m geleden bijgewerkt",
+                swim: "Openwater zwemmen",
+                walk: "Wandelen",
+                run: "Hardlopen",
+                cycling: "Fietsen"
+            },
+            pt: {
+                connecting: "Conectando à sessão ao vivo...",
+                noSession: "Nenhum ID de sessão fornecido. Verifique o link.",
+                notFound: "Sessão não encontrada ou expirada.",
+                waitingGps: "Aguardando sinal GPS...",
+                connectionError: "Erro de conexão. Atualize a página.",
+                live: "AO VIVO",
+                ended: "ENCERRADO",
+                paused: "PAUSADO",
+                waiting: "AGUARDANDO",
+                distance: "Distância",
+                time: "Tempo",
+                pace: "Ritmo",
+                speed: "Velocidade",
+                workoutEnded: "Treino encerrado",
+                sessionFinished: "Esta sessão foi encerrada.",
+                updatedNow: "Atualizado agora",
+                updatedSec: "Atualizado há {0}s",
+                updatedMin: "Atualizado há {0}m",
+                swim: "Natação em águas abertas",
+                walk: "Caminhada",
+                run: "Corrida",
+                cycling: "Ciclismo"
+            },
+            ja: {
+                connecting: "ライブセッションに接続中...",
+                noSession: "セッションIDがありません。リンクを確認してください。",
+                notFound: "セッションが見つからないか期限切れです。",
+                waitingGps: "GPS信号を待っています...",
+                connectionError: "接続エラー。ページを更新してください。",
+                live: "ライブ",
+                ended: "終了",
+                paused: "一時停止",
+                waiting: "待機中",
+                distance: "距離",
+                time: "時間",
+                pace: "ペース",
+                speed: "速度",
+                workoutEnded: "ワークアウト終了",
+                sessionFinished: "このセッションは終了しました。",
+                updatedNow: "たった今更新",
+                updatedSec: "{0}秒前に更新",
+                updatedMin: "{0}分前に更新",
+                swim: "オープンウォータースイム",
+                walk: "ウォーキング",
+                run: "ランニング",
+                cycling: "サイクリング"
+            },
+            zh: {
+                connecting: "正在连接实时会话...",
+                noSession: "未提供会话ID。请检查链接。",
+                notFound: "会话未找到或已过期。",
+                waitingGps: "等待GPS信号...",
+                connectionError: "连接错误。请刷新页面。",
+                live: "直播中",
+                ended: "已结束",
+                paused: "已暂停",
+                waiting: "等待中",
+                distance: "距离",
+                time: "时间",
+                pace: "配速",
+                speed: "速度",
+                workoutEnded: "锻炼结束",
+                sessionFinished: "此会话已结束。",
+                updatedNow: "刚刚更新",
+                updatedSec: "{0}秒前更新",
+                updatedMin: "{0}分钟前更新",
+                swim: "公开水域游泳",
+                walk: "步行",
+                run: "跑步",
+                cycling: "骑行"
+            },
+            sv: {
+                connecting: "Ansluter till livesession...",
+                noSession: "Inget sessions-ID angivet. Kontrollera länken.",
+                notFound: "Sessionen hittades inte eller har utgått.",
+                waitingGps: "Väntar på GPS-signal...",
+                connectionError: "Anslutningsfel. Uppdatera sidan.",
+                live: "LIVE",
+                ended: "AVSLUTAD",
+                paused: "PAUSAD",
+                waiting: "VÄNTAR",
+                distance: "Distans",
+                time: "Tid",
+                pace: "Tempo",
+                speed: "Hastighet",
+                workoutEnded: "Träning avslutad",
+                sessionFinished: "Denna session har avslutats.",
+                updatedNow: "Uppdaterad just nu",
+                updatedSec: "Uppdaterad för {0}s sedan",
+                updatedMin: "Uppdaterad för {0}m sedan",
+                swim: "Öppet vatten simning",
+                walk: "Promenad",
+                run: "Löpning",
+                cycling: "Cykling"
+            },
+            ko: {
+                connecting: "라이브 세션에 연결 중...",
+                noSession: "세션 ID가 제공되지 않았습니다. 링크를 확인하세요.",
+                notFound: "세션을 찾을 수 없거나 만료되었습니다.",
+                waitingGps: "GPS 신호 대기 중...",
+                connectionError: "연결 오류. 페이지를 새로고침하세요.",
+                live: "라이브",
+                ended: "종료",
+                paused: "일시정지",
+                waiting: "대기 중",
+                distance: "거리",
+                time: "시간",
+                pace: "페이스",
+                speed: "속도",
+                workoutEnded: "운동 종료",
+                sessionFinished: "이 세션이 종료되었습니다.",
+                updatedNow: "방금 업데이트",
+                updatedSec: "{0}초 전 업데이트",
+                updatedMin: "{0}분 전 업데이트",
+                swim: "오픈워터 수영",
+                walk: "걷기",
+                run: "달리기",
+                cycling: "사이클링"
+            },
+            ru: {
+                connecting: "Подключение к трансляции...",
+                noSession: "ID сессии не указан. Проверьте ссылку.",
+                notFound: "Сессия не найдена или истекла.",
+                waitingGps: "Ожидание сигнала GPS...",
+                connectionError: "Ошибка подключения. Обновите страницу.",
+                live: "LIVE",
+                ended: "ЗАВЕРШЕНО",
+                paused: "ПАУЗА",
+                waiting: "ОЖИДАНИЕ",
+                distance: "Расстояние",
+                time: "Время",
+                pace: "Темп",
+                speed: "Скорость",
+                workoutEnded: "Тренировка завершена",
+                sessionFinished: "Эта сессия завершена.",
+                updatedNow: "Обновлено только что",
+                updatedSec: "Обновлено {0}с назад",
+                updatedMin: "Обновлено {0}м назад",
+                swim: "Плавание на открытой воде",
+                walk: "Ходьба",
+                run: "Бег",
+                cycling: "Велоспорт"
+            }
+        };
+
+        // Detect browser language, fallback to English
+        function detectLanguage() {
+            const browserLang = (navigator.language || navigator.userLanguage || "en").toLowerCase();
+            const lang = browserLang.split("-")[0];
+            return STRINGS[lang] ? lang : "en";
+        }
+
+        const lang = detectLanguage();
+        const t = (key) => (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key;
+
+        // Apply initial localized text
+        document.getElementById("overlay-text").textContent = t("connecting");
+        document.getElementById("badge-text").textContent = t("live");
+        document.getElementById("label-distance").textContent = t("distance");
+        document.getElementById("label-time").textContent = t("time");
+        document.getElementById("pace-label").textContent = t("pace");
+        document.getElementById("ended-title").textContent = t("workoutEnded");
+        document.getElementById("ended-text").textContent = t("sessionFinished");
+
+        const SPORT_EMOJI = { swim: "\uD83C\uDFCA", walk: "\uD83D\uDEB6", run: "\uD83C\uDFC3", cycling: "\uD83D\uDEB4" };
+
+        // ---- END LOCALIZATION ----
+
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get("id");
+
+        const overlay = document.getElementById("overlay");
+        const overlayText = document.getElementById("overlay-text");
+
+        if (!sessionId) {
+            overlayText.textContent = t("noSession");
+            throw new Error("No session ID");
+        }
+
+        const app = initializeApp(FIREBASE_CONFIG);
+        const db = getDatabase(app);
+        const sessionRef = ref(db, `sessions/${sessionId}`);
+
+        let map = null;
+        let routeCoords = [];
+        let lastLat = null, lastLon = null;
+        let sessionEnded = false;
+
+        function formatDistance(meters, sport) {
+            if (sport === "swim") return `${Math.round(meters)}m`;
+            if (meters >= 1000) return `${(meters / 1000).toFixed(2)} km`;
+            return `${Math.round(meters)}m`;
+        }
+
+        function computePace(distanceMeters, elapsedStr, sport) {
+            const parts = elapsedStr.split(":").map(Number);
+            const totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+            if (totalSeconds <= 0 || distanceMeters <= 0) return "--";
+
+            if (sport === "cycling") {
+                const speedKmh = (distanceMeters / 1000) / (totalSeconds / 3600);
+                document.getElementById("pace-label").textContent = t("speed");
+                return `${speedKmh.toFixed(1)} km/h`;
+            }
+
+            let paceBase;
+            if (sport === "swim") {
+                paceBase = totalSeconds / (distanceMeters / 100);
+            } else {
+                paceBase = totalSeconds / (distanceMeters / 1000);
+            }
+            const paceMin = Math.floor(paceBase / 60);
+            const paceSec = Math.floor(paceBase % 60);
+            document.getElementById("pace-label").textContent = t("pace");
+            const unit = sport === "swim" ? "/100m" : "/km";
+            return `${paceMin}:${String(paceSec).padStart(2, "0")}${unit}`;
+        }
+
+        function initMap(lat, lon, sport) {
+            const routeColor = sport === "swim" ? "#e74c3c" : "#00d4ff";
+
+            map = new maplibregl.Map({
+                container: "map",
+                style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`,
+                center: [lon, lat],
+                zoom: 16,
+                attributionControl: false
+            });
+
+            map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+
+            map.on("load", () => {
+                map.addSource("route", {
+                    type: "geojson",
+                    data: { type: "Feature", geometry: { type: "LineString", coordinates: [] } }
+                });
+                map.addLayer({
+                    id: "route-line",
+                    type: "line",
+                    source: "route",
+                    paint: {
+                        "line-color": routeColor,
+                        "line-width": 4,
+                        "line-opacity": 0.85
+                    }
+                });
+
+                const size = 80;
+                const pulsingDot = {
+                    width: size, height: size, data: new Uint8Array(size * size * 4),
+                    onAdd() { this.canvas = document.createElement("canvas"); this.canvas.width = size; this.canvas.height = size; this.context = this.canvas.getContext("2d"); },
+                    render() {
+                        const tt = (performance.now() % 1500) / 1500;
+                        const ctx = this.context;
+                        const r = size / 2;
+                        ctx.clearRect(0, 0, size, size);
+                        ctx.beginPath();
+                        ctx.arc(r, r, r * (0.5 + tt * 0.5), 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(0, 212, 255, ${0.3 * (1 - tt)})`;
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(r, r, 8, 0, Math.PI * 2);
+                        ctx.fillStyle = "#00d4ff";
+                        ctx.strokeStyle = "#fff";
+                        ctx.lineWidth = 2;
+                        ctx.fill();
+                        ctx.stroke();
+                        this.data = ctx.getImageData(0, 0, size, size).data;
+                        map.triggerRepaint();
+                        return true;
+                    }
+                };
+
+                map.addImage("pulsing-dot", pulsingDot, { pixelRatio: 2 });
+                map.addSource("position", {
+                    type: "geojson",
+                    data: { type: "Feature", geometry: { type: "Point", coordinates: [lon, lat] } }
+                });
+                map.addLayer({
+                    id: "position-dot",
+                    type: "symbol",
+                    source: "position",
+                    layout: { "icon-image": "pulsing-dot", "icon-allow-overlap": true }
+                });
+            });
+        }
+
+        function updateMap(lat, lon) {
+            if (!map) return;
+
+            routeCoords.push([lon, lat]);
+
+            const routeSource = map.getSource("route");
+            if (routeSource) {
+                routeSource.setData({
+                    type: "Feature",
+                    geometry: { type: "LineString", coordinates: routeCoords }
+                });
+            }
+
+            const posSource = map.getSource("position");
+            if (posSource) {
+                posSource.setData({
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: [lon, lat] }
+                });
+            }
+
+            if (!sessionEnded) {
+                map.easeTo({ center: [lon, lat], duration: 500 });
+            }
+        }
+
+        let updateInterval;
+        let lastUpdateTime = null;
+
+        function startUpdatedTimer() {
+            if (updateInterval) return;
+            updateInterval = setInterval(() => {
+                if (!lastUpdateTime) return;
+                const seconds = Math.floor((Date.now() - lastUpdateTime) / 1000);
+                const label = document.getElementById("updated-label");
+                if (seconds < 5) label.textContent = t("updatedNow");
+                else if (seconds < 60) label.textContent = t("updatedSec").replace("{0}", seconds);
+                else label.textContent = t("updatedMin").replace("{0}", Math.floor(seconds / 60));
+            }, 1000);
+        }
+
+        // Listen for session data
+        let firstLoad = true;
+        onValue(sessionRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                overlayText.textContent = t("notFound");
+                return;
+            }
+
+            const sport = data.sport || "swim";
+            const status = data.status || "active";
+            const current = data.current;
+
+            // Update sport label
+            document.getElementById("sport-label").textContent =
+                `${SPORT_EMOJI[sport] || ""} ${t(sport)}`;
+
+            if (status === "ended") {
+                sessionEnded = true;
+                const badge = document.getElementById("live-badge");
+                badge.classList.add("ended");
+                badge.querySelector(".pulse-dot").classList.add("ended");
+                document.getElementById("badge-text").textContent = t("ended");
+                document.getElementById("ended-banner").style.display = "block";
+                if (updateInterval) clearInterval(updateInterval);
+                document.getElementById("updated-label").textContent = "";
+            }
+
+            if (!current) return;
+
+            const lat = current.lat;
+            const lon = current.lon;
+
+            if (lat === 0 && lon === 0) {
+                if (firstLoad) {
+                    overlayText.textContent = t("waitingGps");
+                    const badge = document.getElementById("live-badge");
+                    badge.classList.add("waiting");
+                    document.getElementById("badge-text").textContent = t("waiting");
+                }
+                return;
+            }
+
+            if (!map) {
+                overlay.classList.add("hidden");
+                initMap(lat, lon, sport);
+                startUpdatedTimer();
+            }
+
+            if (firstLoad) {
+                const badge = document.getElementById("live-badge");
+                badge.classList.remove("waiting");
+                document.getElementById("badge-text").textContent = status === "ended" ? t("ended") : t("live");
+                firstLoad = false;
+            }
+
+            if (lat !== lastLat || lon !== lastLon) {
+                updateMap(lat, lon);
+                lastLat = lat;
+                lastLon = lon;
+            }
+
+            document.getElementById("stat-distance").textContent = formatDistance(current.distance || 0, sport);
+            document.getElementById("stat-elapsed").textContent = current.elapsed || "--:--:--";
+            document.getElementById("stat-pace").textContent = computePace(current.distance || 0, current.elapsed || "0:0:0", sport);
+
+            if (current.isPaused && status !== "ended") {
+                document.getElementById("badge-text").textContent = t("paused");
+                document.getElementById("live-badge").classList.add("waiting");
+            } else if (status !== "ended") {
+                document.getElementById("badge-text").textContent = t("live");
+                document.getElementById("live-badge").classList.remove("waiting");
+            }
+
+            lastUpdateTime = current.updatedAt || Date.now();
+        }, (error) => {
+            overlayText.textContent = t("connectionError");
+            console.error("Firebase error:", error);
+        });
+    </script>
+</body>
+</html>

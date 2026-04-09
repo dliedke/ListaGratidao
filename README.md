@@ -25,12 +25,14 @@ A personal gratitude journal web app. Record daily reasons for gratitude, view t
 ## Project Structure
 
 ```
-index.html          Main HTML page
-app.js              Application logic (I18n, Auth, DB, Biometric, Calendar, EntryForm, TXTExport, CSVExport, Router)
-style.css           Styles (dark theme, responsive)
-favicon.svg         Site icon
-firebase-config.js  Firebase project configuration
-firebase.json       Firebase Hosting settings
+index.html              Main HTML page (Gratitude Journal)
+app.js                  Application logic (I18n, Auth, DB, Biometric, Calendar, EntryForm, TXTExport, CSVExport, Router)
+style.css               Styles (dark theme, responsive)
+favicon.svg             Site icon
+firebase-config.js      Firebase project configuration
+firebase.json           Firebase Hosting + Realtime Database settings
+database.rules.json     Realtime Database security rules (live location sessions)
+live.html               Adventure Tracker live location viewer page
 ```
 
 ## Setup
@@ -38,25 +40,86 @@ firebase.json       Firebase Hosting settings
 1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
 2. Enable **Google Authentication** in the Firebase console
 3. Create a **Cloud Firestore** database
-4. Copy your Firebase config into `firebase-config.js`:
+4. Enable **Realtime Database** (Build > Realtime Database > Create Database)
+5. Copy your Firebase config into `firebase-config.js`:
    ```js
    const firebaseConfig = { /* your config */ };
    firebase.initializeApp(firebaseConfig);
    const auth = firebase.auth();
    const db = firebase.firestore();
    ```
-5. Install Firebase CLI and deploy:
+6. Install Firebase CLI and deploy:
    ```bash
    npm install -g firebase-tools
    firebase login
-   firebase deploy --only hosting
+   firebase deploy
    ```
 
 ## Deployment
 
+### Deploy everything (hosting + database rules)
+
+```bash
+firebase deploy
+```
+
+### Deploy only hosting (Gratitude Journal + Live Location page)
+
 ```bash
 firebase deploy --only hosting
 ```
+
+### Deploy only Realtime Database rules
+
+```bash
+firebase deploy --only database
+```
+
+## Adventure Tracker - Live Location Sharing
+
+This Firebase project also hosts the live location viewer page for the **Adventure Tracker** mobile app (`.NET MAUI`).
+
+### How it works
+
+1. During a workout, the Adventure Tracker app posts GPS position updates to the **Realtime Database** every 15 seconds
+2. The user shares a link (e.g., `https://listagratidao.web.app/live?id=SESSION_ID`) with a safety contact
+3. The safety contact opens the link in any browser and sees real-time position, route, distance, and elapsed time on a map
+4. When the workout ends (or the app is closed), the session is marked as ended
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `live.html` | Viewer page — MapLibre GL map with Firebase Realtime Database listener |
+| `database.rules.json` | Security rules — anyone can read sessions, write requires a matching token |
+
+### Realtime Database structure
+
+```
+sessions/
+  {sessionId}/
+    sport: "run" | "walk" | "swim" | "cycling"
+    status: "active" | "ended"
+    writeToken: "<uuid>"
+    startedAt: <timestamp>
+    current/
+      lat: <number>
+      lon: <number>
+      distance: <meters>
+      elapsed: "HH:mm:ss"
+      isPaused: <boolean>
+      updatedAt: <timestamp>
+```
+
+### Security rules
+
+- **Read**: Anyone can read any session (access is controlled by unguessable UUID session IDs)
+- **Write**: Only allowed if the session doesn't exist yet (create) or the `writeToken` matches (update)
+- Sessions should be periodically cleaned up (e.g., delete sessions older than 24h)
+
+### Localization
+
+The viewer page auto-detects the browser language and supports: English, Spanish, French, German, Italian, Dutch, Portuguese, Japanese, Chinese, Swedish, Korean, and Russian.
 
 ## Install as an App (Android and iOS)
 
