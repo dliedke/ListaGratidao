@@ -7,9 +7,9 @@
     <meta name="theme-color" content="#1e1e1e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260324-1">
-    <link rel="apple-touch-icon" href="icon-192x192.png?v=20260324-1">
-    <link rel="manifest" href="manifest.json?v=20260324-1">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260517-1">
+    <link rel="apple-touch-icon" href="icon-192x192.png?v=20260517-1">
+    <link rel="manifest" href="manifest.json?v=20260517-1">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -104,7 +104,7 @@
 
         <!-- App icon (clickable for stats) -->
         <div style="text-align:center;padding:2rem;">
-            <img id="app-icon" src="favicon.svg?v=20260324-1" alt="Icon preview" style="width:128px;height:128px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <img id="app-icon" src="favicon.svg?v=20260517-1" alt="Icon preview" style="width:128px;height:128px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
     </div>
 
@@ -245,6 +245,13 @@
                 <input type="text" class="settings-emoji-input" maxlength="4">
                 <input type="text" class="settings-emoji-input" maxlength="4">
             </div>
+            <hr class="settings-divider">
+            <label data-i18n="settingsLanguage" for="settings-language">Idioma</label>
+            <select id="settings-language" class="settings-language-select">
+                <option value="system" data-i18n="langSystem">Sistema (navegador)</option>
+                <option value="en" data-i18n="langEnglish">English</option>
+                <option value="pt" data-i18n="langPortuguese">Português</option>
+            </select>
             <hr id="biometric-divider" class="settings-divider hidden">
             <div id="biometric-setting" class="biometric-setting hidden">
                 <label data-i18n="settingsBiometric">Bloqueio biométrico</label>

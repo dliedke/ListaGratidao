@@ -65,7 +65,11 @@ const I18n = {
             settingsBiometric: "Bloqueio biométrico",
             settingsBiometricDesc: "Exigir impressão digital ou Face ID para acessar",
             biometricEnable: "Ativar",
-            biometricDisable: "Desativar"
+            biometricDisable: "Desativar",
+            settingsLanguage: "Idioma",
+            langSystem: "Sistema (navegador)",
+            langEnglish: "English",
+            langPortuguese: "Português"
         },
         en: {
             appTitle: "Gratitude Journal",
@@ -127,13 +131,37 @@ const I18n = {
             settingsBiometric: "Biometric lock",
             settingsBiometricDesc: "Require fingerprint or Face ID to access",
             biometricEnable: "Enable",
-            biometricDisable: "Disable"
+            biometricDisable: "Disable",
+            settingsLanguage: "Language",
+            langSystem: "System (browser)",
+            langEnglish: "English",
+            langPortuguese: "Portuguese"
         }
     },
 
     init() {
+        this.locale = this.resolveLocale();
+        document.documentElement.lang = this.locale === "en" ? "en" : "pt-BR";
+        this.applyToDOM();
+    },
+
+    // Stored language preference: "system" | "en" | "pt"
+    getPreference() {
+        return localStorage.getItem("langPreference") || "system";
+    },
+
+    // Resolve the effective locale from the stored preference,
+    // falling back to the browser language when set to "system"
+    resolveLocale() {
+        const pref = this.getPreference();
+        if (pref === "en" || pref === "pt") return pref;
         const lang = navigator.language || "pt";
-        this.locale = lang.startsWith("en") ? "en" : "pt";
+        return lang.startsWith("en") ? "en" : "pt";
+    },
+
+    setLanguage(pref) {
+        localStorage.setItem("langPreference", pref);
+        this.locale = this.resolveLocale();
         document.documentElement.lang = this.locale === "en" ? "en" : "pt-BR";
         this.applyToDOM();
     },
@@ -338,6 +366,10 @@ const Settings = {
             input.value = this.emojis[i] || "";
         });
 
+        // Language preference dropdown
+        const langSelect = document.getElementById("settings-language");
+        if (langSelect) langSelect.value = I18n.getPreference();
+
         // Show biometric option if device supports it
         const biometricSetting = document.getElementById("biometric-setting");
         const biometricDivider = document.getElementById("biometric-divider");
@@ -388,6 +420,14 @@ const Settings = {
     },
 
     async saveFromModal() {
+        // Apply language preference if it changed
+        const langSelect = document.getElementById("settings-language");
+        if (langSelect && langSelect.value !== I18n.getPreference()) {
+            I18n.setLanguage(langSelect.value);
+            Calendar.render();
+            Streak.display();
+        }
+
         const inputs = document.querySelectorAll(".settings-emoji-input");
         const emojis = [];
         inputs.forEach(input => {

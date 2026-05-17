@@ -692,6 +692,26 @@ a.export-mailto-link {
     justify-content: space-between;
 }
 
+.settings-language-select {
+    width: auto;
+    max-width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+    color-scheme: dark;
+    margin-bottom: 1rem;
+}
+
+.settings-language-select:focus {
+    border-color: var(--green-500);
+}
+
 /* Lock Screen (Biometric) */
 #lock-screen {
     display: flex;
