@@ -1339,11 +1339,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-biometric-toggle").addEventListener("click", () => Settings.toggleBiometric());
 
     // Close modals on overlay click
-    document.getElementById("entry-modal").addEventListener("click", (e) => {
-        if (e.target === e.currentTarget) {
-            EntryForm.close();
-        }
-    });
+    // Note: entry-modal intentionally does NOT close on overlay click to prevent
+    // accidental loss of gratitude entries being typed.
     document.getElementById("export-modal").addEventListener("click", (e) => {
         if (e.target === e.currentTarget) {
             TXTExport.closeModal();
