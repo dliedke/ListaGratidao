@@ -41,6 +41,7 @@ const I18n = {
             weekdaysTXT: "Domingo,Segunda-Feira,Terça-Feira,Quarta-Feira,Quinta-Feira,Sexta-Feira,Sábado",
             loginError: "Erro ao fazer login. Tente novamente.",
             confirmDelete: "Tem certeza que deseja apagar esta entrada?",
+            confirmUnsavedChanges: "Você tem alterações não salvas. Deseja salvar antes de fechar?",
             noEntries: "Nenhuma entrada para exportar.",
             selectDates: "Selecione as datas de início e fim.",
             invalidDateRange: "A data de início deve ser anterior à data de fim.",
@@ -107,6 +108,7 @@ const I18n = {
             weekdaysTXT: "Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday",
             loginError: "Login failed. Please try again.",
             confirmDelete: "Are you sure you want to delete this entry?",
+            confirmUnsavedChanges: "You have unsaved changes. Do you want to save before closing?",
             noEntries: "No entries to export.",
             selectDates: "Please select start and end dates.",
             invalidDateRange: "Start date must be before end date.",
@@ -916,6 +918,7 @@ const Calendar = {
 // ============================================================
 const EntryForm = {
     currentDate: null,
+    originalContent: "",
 
     async open(dateStr) {
         this.currentDate = dateStr;
@@ -941,11 +944,25 @@ const EntryForm = {
         weekdayDisplay.textContent = weekdays[dateObj.getDay()];
 
         textarea.value = await DB.load(dateStr);
+        this.originalContent = textarea.value;
         modal.classList.remove("hidden");
         textarea.focus();
     },
 
-    close() {
+    async close() {
+        const textarea = document.getElementById("entry-textarea");
+
+        if (this.currentDate && textarea.value.trim() !== this.originalContent.trim()) {
+            if (confirm(I18n.t("confirmUnsavedChanges"))) {
+                await this.save();
+                return;
+            }
+        }
+
+        this.hide();
+    },
+
+    hide() {
         // Reset save button state
         const saveBtn = document.getElementById("btn-save-entry");
         saveBtn.disabled = false;
@@ -953,6 +970,7 @@ const EntryForm = {
 
         document.getElementById("entry-modal").classList.add("hidden");
         this.currentDate = null;
+        this.originalContent = "";
     },
 
     async save() {
@@ -978,7 +996,7 @@ const EntryForm = {
             saveBtn.textContent = I18n.t("saved");
 
             setTimeout(() => {
-                this.close();
+                this.hide();
                 Calendar.load();
             }, 500); // Delay para mostrar sucesso
 
@@ -994,7 +1012,7 @@ const EntryForm = {
         if (!this.currentDate) return;
         if (!confirm(I18n.t("confirmDelete"))) return;
         await DB.remove(this.currentDate);
-        this.close();
+        this.hide();
         Calendar.load();
     },
 
